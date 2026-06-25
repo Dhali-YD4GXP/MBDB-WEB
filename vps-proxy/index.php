@@ -2,6 +2,19 @@
 // PHP Reverse Proxy for Next.js (port 3000) & Go REST API (port 8080) on DirectAdmin VPS
 // Place this file as 'index.php' inside your public_html directory.
 
+// Fallback for getallheaders() if not running under Apache
+if (!function_exists('getallheaders')) {
+    function getallheaders() {
+        $headers = [];
+        foreach ($_SERVER as $name => $value) {
+            if (substr($name, 0, 5) == 'HTTP_') {
+                $headers[str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
+            }
+        }
+        return $headers;
+    }
+}
+
 $requestUri = $_SERVER['REQUEST_URI'];
 $method = $_SERVER['REQUEST_METHOD'];
 
