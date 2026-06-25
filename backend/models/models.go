@@ -88,13 +88,14 @@ type OrgStructure struct {
 
 // FinanceRecord represents money flowing in or out of MBDB treasury
 type FinanceRecord struct {
-	ID         uint      `gorm:"primaryKey" json:"id"`
-	Tipe       string    `gorm:"not null;type:varchar(20)" json:"tipe"` // "Kas Masuk" or "Kas Keluar"
-	Jumlah     float64   `gorm:"not null;type:decimal(15,2)" json:"jumlah"`
-	Keterangan string    `gorm:"not null;type:text" json:"keterangan"`
-	CreatedBy  uint      `gorm:"not null" json:"created_by"`
-	User       User      `gorm:"foreignKey:CreatedBy" json:"created_by_user"`
-	Timestamp  time.Time `gorm:"not null" json:"timestamp"`
+	ID           uint      `gorm:"primaryKey" json:"id"`
+	Tipe         string    `gorm:"not null;type:varchar(20)" json:"tipe"` // "Kas Masuk" or "Kas Keluar"
+	Jumlah       float64   `gorm:"not null;type:decimal(15,2)" json:"jumlah"`
+	Keterangan   string    `gorm:"not null;type:text" json:"keterangan"`
+	ReceiptPath  string    `gorm:"type:text" json:"receipt_path"` // Optional receipt image url
+	CreatedBy    uint      `gorm:"not null" json:"created_by"`
+	User         User      `gorm:"foreignKey:CreatedBy" json:"created_by_user"`
+	Timestamp    time.Time `gorm:"not null" json:"timestamp"`
 }
 
 // PracticeSession represents a practice session started by the admin

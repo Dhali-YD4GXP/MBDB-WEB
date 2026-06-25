@@ -90,6 +90,7 @@ export interface FinanceRecord {
   tipe: 'Kas Masuk' | 'Kas Keluar';
   jumlah: number;
   keterangan: string;
+  receipt_path?: string;
   created_by: number;
   created_by_user?: User;
   timestamp: string;

@@ -18,7 +18,44 @@ export default function FinancePage() {
   const [tipe, setTipe] = useState('Kas Masuk');
   const [jumlah, setJumlah] = useState('');
   const [keterangan, setKeterangan] = useState('');
+  const [receipt, setReceipt] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate size client-side (2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Ukuran file bukti struk maksimal 2MB.');
+      setReceipt(null);
+      setReceiptPreview(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    // Validate type client-side
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!validTypes.includes(file.type)) {
+      alert('Format file harus JPG, JPEG, atau PNG.');
+      setReceipt(null);
+      setReceiptPreview(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    setReceipt(file);
+    
+    // Create preview URL
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setReceiptPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     // Role guard: Bendahara or Admin
@@ -66,16 +103,23 @@ export default function FinancePage() {
       return;
     }
 
+    const formData = new FormData();
+    formData.append('tipe', tipe);
+    formData.append('jumlah', parsedJumlah.toString());
+    formData.append('keterangan', keterangan.trim());
+    if (receipt) {
+      formData.append('receipt', receipt);
+    }
+
     try {
-      await api.post('/api/finance', {
-        tipe,
-        jumlah: parsedJumlah,
-        keterangan: keterangan.trim(),
-      });
+      await api.upload('/api/finance', formData);
 
       setSuccessMsg('Transaksi keuangan berhasil dicatat!');
       setJumlah('');
       setKeterangan('');
+      setReceipt(null);
+      setReceiptPreview(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
       
       // Auto-dismiss success message
       setTimeout(() => setSuccessMsg(null), 4000);
@@ -271,6 +315,62 @@ export default function FinancePage() {
                       />
                     </div>
 
+                    <div className="form-group">
+                      <label className="form-label">Bukti Struk Belanja (Opsional, Maks 2MB)</label>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept=".jpg,.jpeg,.png"
+                        style={{ display: 'none' }}
+                      />
+                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <button
+                          type="button"
+                          className="btn btn-outline"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={isSubmitting}
+                          style={{ flex: 1, padding: '0.6rem 1rem', fontSize: '0.875rem' }}
+                        >
+                          📂 {receipt ? 'Ubah File Struk' : 'Pilih Struk'}
+                        </button>
+                        {receipt && (
+                          <button
+                            type="button"
+                            className="btn btn-secondary"
+                            onClick={() => {
+                              setReceipt(null);
+                              setReceiptPreview(null);
+                              if (fileInputRef.current) fileInputRef.current.value = '';
+                            }}
+                            style={{ color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.2)', padding: '0.6rem 1rem', fontSize: '0.875rem' }}
+                          >
+                            ✕ Hapus
+                          </button>
+                        )}
+                      </div>
+                      
+                      {/* Receipt Preview */}
+                      {receiptPreview && (
+                        <div
+                          style={{
+                            marginTop: '0.75rem',
+                            width: '100%',
+                            maxHeight: '150px',
+                            borderRadius: 'var(--radius-sm)',
+                            border: '1px solid var(--border-color)',
+                            overflow: 'hidden',
+                            backgroundColor: 'var(--bg-tertiary)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <img src={receiptPreview} alt="Pratinjau Struk" style={{ maxWidth: '100%', maxHeight: '150px', objectFit: 'contain' }} />
+                        </div>
+                      )}
+                    </div>
+
                     <button
                       type="submit"
                       className="btn btn-accent"
@@ -333,6 +433,18 @@ export default function FinancePage() {
                             Dicatat oleh:{' '}
                             <strong style={{ color: 'var(--text-secondary)' }}>{rec.created_by_user?.username || 'Unknown'}</strong>
                           </div>
+                          {rec.receipt_path && (
+                            <div style={{ marginTop: '0.5rem' }}>
+                              <button
+                                type="button"
+                                onClick={() => window.open(api.getMediaUrl(rec.receipt_path || ''), '_blank')}
+                                className="btn btn-outline"
+                                style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem', borderRadius: 'var(--radius-sm)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                              >
+                                📄 Lihat Bukti Struk
+                              </button>
+                            </div>
+                          )}
                         </div>
 
                         {/* Amount */}

@@ -43,6 +43,13 @@ func SetupRoutes(db *gorm.DB) *http.ServeMux {
 	fileServer := http.FileServer(http.Dir(uploadDir))
 	mux.Handle("GET /uploads/photos/", http.StripPrefix("/uploads/photos/", fileServer))
 
+	// Static route for serving uploaded receipts securely
+	receiptDir := "./uploads/receipts"
+	if err := os.MkdirAll(receiptDir, 0755); err == nil {
+		receiptServer := http.FileServer(http.Dir(receiptDir))
+		mux.Handle("GET /uploads/receipts/", http.StripPrefix("/uploads/receipts/", receiptServer))
+	}
+
 	// 2. PROTECTED ROUTES (Admin Only)
 	adminAuth := middleware.AuthMiddleware(db, "Admin")
 	

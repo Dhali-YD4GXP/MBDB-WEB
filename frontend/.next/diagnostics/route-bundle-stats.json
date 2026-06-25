@@ -86,6 +86,20 @@
     ]
   },
   {
+    "route": "/finance",
+    "firstLoadUncompressedJsBytes": 551862,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/0meacxkx4t0gc.js",
+      ".next/static/chunks/14mrh2-p_w84d.js",
+      ".next/static/chunks/0fn3lm-ro-prv.js",
+      ".next/static/chunks/1gdoryk6w2r8v.js",
+      ".next/static/chunks/27jktro2p5rq9.js",
+      ".next/static/chunks/2nykiepra7i1k.js",
+      ".next/static/chunks/11oof8oxnxiv9.js",
+      ".next/static/chunks/turbopack-2pg_etpvov4o7.js"
+    ]
+  },
+  {
     "route": "/anggota",
     "firstLoadUncompressedJsBytes": 551778,
     "firstLoadChunkPaths": [
@@ -106,20 +120,6 @@
       ".next/static/chunks/0meacxkx4t0gc.js",
       ".next/static/chunks/14mrh2-p_w84d.js",
       ".next/static/chunks/133cr_ir3ezjd.js",
-      ".next/static/chunks/1gdoryk6w2r8v.js",
-      ".next/static/chunks/27jktro2p5rq9.js",
-      ".next/static/chunks/2nykiepra7i1k.js",
-      ".next/static/chunks/11oof8oxnxiv9.js",
-      ".next/static/chunks/turbopack-2pg_etpvov4o7.js"
-    ]
-  },
-  {
-    "route": "/finance",
-    "firstLoadUncompressedJsBytes": 549393,
-    "firstLoadChunkPaths": [
-      ".next/static/chunks/0meacxkx4t0gc.js",
-      ".next/static/chunks/14mrh2-p_w84d.js",
-      ".next/static/chunks/0y44r9cvf9i-3.js",
       ".next/static/chunks/1gdoryk6w2r8v.js",
       ".next/static/chunks/27jktro2p5rq9.js",
       ".next/static/chunks/2nykiepra7i1k.js",
