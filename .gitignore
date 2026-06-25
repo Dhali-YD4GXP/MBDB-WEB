@@ -1,0 +1,41 @@
+# System
+.DS_Store
+Thumbs.db
+
+# Backend (Go)
+backend/server
+backend/test-server
+backend/*.exe
+backend/*.test
+backend/*.out
+backend/.env
+backend/*.db
+*.db
+
+# Backend uploaded photos (keep the folder structure, ignore contents)
+backend/uploads/photos/*
+!backend/uploads/photos/.gitkeep
+
+# Frontend (Node / Next.js)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnpm-debug.log*
+
+# IDEs
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
