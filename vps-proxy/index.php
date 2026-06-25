@@ -25,6 +25,8 @@ if (strpos($requestUri, '/api/') === 0 || strpos($requestUri, '/uploads/') === 0
     $targetUrl = 'http://127.0.0.1:3000' . $requestUri;
 }
 
+$isMultipart = (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'multipart/form-data') !== false);
+
 // Initialize cURL session
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $targetUrl);
@@ -36,7 +38,12 @@ curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
 // Forward request headers
 $headers = [];
 foreach (getallheaders() as $name => $value) {
-    if (in_array(strtolower($name), ['host', 'content-length', 'connection'])) {
+    $lowerName = strtolower($name);
+    if (in_array($lowerName, ['host', 'content-length', 'connection'])) {
+        continue;
+    }
+    // Skip original Content-Type header if multipart so cURL can generate a fresh boundary header
+    if ($isMultipart && $lowerName === 'content-type') {
         continue;
     }
     $headers[] = "$name: $value";
@@ -45,8 +52,32 @@ curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
 // Forward request body for writing operations
 if (in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'])) {
-    $body = file_get_contents('php://input');
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+    if ($isMultipart) {
+        $postData = $_POST;
+        foreach ($_FILES as $key => $file) {
+            if (empty($file['tmp_name'])) continue;
+            if (is_array($file['tmp_name'])) {
+                foreach ($file['tmp_name'] as $index => $tmpName) {
+                    if (empty($tmpName)) continue;
+                    $postData[$key . '[' . $index . ']'] = new CURLFile(
+                        $tmpName,
+                        $file['type'][$index],
+                        $file['name'][$index]
+                    );
+                }
+            } else {
+                $postData[$key] = new CURLFile(
+                    $file['tmp_name'],
+                    $file['type'],
+                    $file['name']
+                );
+            }
+        }
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+    } else {
+        $body = file_get_contents('php://input');
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+    }
 }
 
 // Execute cURL
