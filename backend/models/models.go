@@ -22,8 +22,10 @@ type Applicant struct {
 	Pilihan1  string    `gorm:"not null;type:varchar(100)" json:"pilihan1"` // Dropdown 1
 	Pilihan2  string    `gorm:"not null;type:varchar(100)" json:"pilihan2"` // Dropdown 2
 	Pilihan3  string    `gorm:"not null;type:varchar(100)" json:"pilihan3"` // Dropdown 3
-	Status    string    `gorm:"not null;type:varchar(20);default:'Pending'" json:"status"` // "Pending", "Accepted", "Rejected"
-	CreatedAt time.Time `json:"created_at"`
+	Status          string    `gorm:"not null;type:varchar(20);default:'Pending'" json:"status"` // "Pending", "Accepted", "Rejected"
+	KodePendaftaran string    `gorm:"type:varchar(50);unique" json:"kode_pendaftaran"`
+	AlatDiterima    string    `gorm:"type:varchar(100)" json:"alat_diterima"`
+	CreatedAt       time.Time `json:"created_at"`
 }
 
 // Instrument represents marching band / drumband instruments

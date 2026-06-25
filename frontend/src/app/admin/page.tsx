@@ -15,6 +15,11 @@ export default function AdminDashboard() {
   // Photo modal preview
   const [previewPhotoUrl, setPreviewPhotoUrl] = useState<string | null>(null);
 
+  // Instrument selection modal for acceptance
+  const [acceptanceModalApp, setAcceptanceModalApp] = useState<Applicant | null>(null);
+  const [selectedInstrument, setSelectedInstrument] = useState<string>('');
+  const [customInstrument, setCustomInstrument] = useState<string>('');
+
   useEffect(() => {
     // Admin role guard
     const token = localStorage.getItem('mbdb_token');
@@ -47,10 +52,44 @@ export default function AdminDashboard() {
       await api.put(`/api/applicants/${id}/status`, { status: newStatus });
       // Update local state to avoid refetching entire list
       setApplicants((prev) =>
-        prev.map((app) => (app.id === id ? { ...app, status: newStatus } : app))
+        prev.map((app) => (app.id === id ? { ...app, status: newStatus, alat_diterima: '' } : app))
       );
     } catch (err: any) {
       setErrorMsg(err.message || 'Gagal mengubah status pendaftar.');
+    }
+  };
+
+  const handleConfirmAcceptance = async () => {
+    if (!acceptanceModalApp) return;
+    const finalInstrument = selectedInstrument === 'custom' ? customInstrument : selectedInstrument;
+    
+    if (!finalInstrument.trim()) {
+      alert('Silakan pilih atau ketik nama alat.');
+      return;
+    }
+    
+    setErrorMsg(null);
+    try {
+      const response = await api.put<any>(`/api/applicants/${acceptanceModalApp.id}/status`, {
+        status: 'Accepted',
+        alat_diterima: finalInstrument.trim(),
+      });
+      
+      const returnedApp = response?.applicant || {};
+      
+      // Update local state
+      setApplicants((prev) =>
+        prev.map((app) =>
+          app.id === acceptanceModalApp.id
+            ? { ...app, status: 'Accepted', alat_diterima: returnedApp.alat_diterima || finalInstrument.trim() }
+            : app
+        )
+      );
+      setAcceptanceModalApp(null);
+      setSelectedInstrument('');
+      setCustomInstrument('');
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Gagal menerima calon anggota.');
     }
   };
 
@@ -297,6 +336,16 @@ export default function AdminDashboard() {
                   <div>Option 1: <strong>{app.pilihan1}</strong></div>
                   <div>Option 2: <strong>{app.pilihan2}</strong></div>
                   <div>Option 3: <strong>{app.pilihan3}</strong></div>
+                  {app.status === 'Accepted' && app.alat_diterima && (
+                    <div style={{ borderTop: '1px solid var(--border-color)', marginTop: '0.5rem', paddingTop: '0.5rem', color: 'var(--success)' }}>
+                      Diterima di: <strong>🎺 {app.alat_diterima}</strong>
+                    </div>
+                  )}
+                  {app.kode_pendaftaran && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '0.25rem' }}>
+                      Kode: <span style={{ fontFamily: 'monospace' }}>{app.kode_pendaftaran}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Actions */}
@@ -304,7 +353,11 @@ export default function AdminDashboard() {
                   {app.status === 'Pending' ? (
                     <>
                       <button
-                        onClick={() => handleUpdateStatus(app.id, 'Accepted')}
+                        onClick={() => {
+                          setSelectedInstrument(app.pilihan1 || '');
+                          setCustomInstrument('');
+                          setAcceptanceModalApp(app);
+                        }}
                         className="btn btn-primary"
                         style={{ flex: 1, padding: '0.5rem', fontSize: '0.875rem', backgroundColor: 'var(--success)' }}
                       >
@@ -365,6 +418,139 @@ export default function AdminDashboard() {
                 objectFit: 'contain',
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Instrument Selection Modal */}
+      {acceptanceModalApp && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99,
+            padding: '1rem',
+          }}
+        >
+          <div
+            className="card glass"
+            style={{
+              maxWidth: '500px',
+              width: '100%',
+              padding: '2rem',
+              border: '1px solid var(--border-color)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.5rem',
+              boxShadow: 'var(--shadow-gold)',
+            }}
+          >
+            <div>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem', color: 'var(--accent)' }}>
+                Pilih Alat Musik
+              </h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                Tentukan alat musik penempatan untuk pendaftar <strong>{acceptanceModalApp.nama}</strong>.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Instrument preference options */}
+              {[
+                { label: `Pilihan 1: ${acceptanceModalApp.pilihan1}`, value: acceptanceModalApp.pilihan1 },
+                { label: `Pilihan 2: ${acceptanceModalApp.pilihan2}`, value: acceptanceModalApp.pilihan2 },
+                { label: `Pilihan 3: ${acceptanceModalApp.pilihan3}`, value: acceptanceModalApp.pilihan3 },
+              ].map((opt) => (
+                <label
+                  key={opt.value}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: '0.75rem 1rem',
+                    borderRadius: 'var(--radius-md)',
+                    backgroundColor: 'var(--bg-tertiary)',
+                    border: `1px solid ${selectedInstrument === opt.value ? 'var(--accent)' : 'var(--border-color)'}`,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="instrument-opt"
+                    checked={selectedInstrument === opt.value}
+                    onChange={() => setSelectedInstrument(opt.value)}
+                  />
+                  <div>
+                    <span style={{ fontSize: '0.925rem', color: 'var(--text-primary)' }}>{opt.label}</span>
+                  </div>
+                </label>
+              ))}
+
+              {/* Custom instrument option */}
+              <label
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  padding: '0.75rem 1rem',
+                  borderRadius: 'var(--radius-md)',
+                  backgroundColor: 'var(--bg-tertiary)',
+                  border: `1px solid ${selectedInstrument === 'custom' ? 'var(--accent)' : 'var(--border-color)'}`,
+                  cursor: 'pointer',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <input
+                    type="radio"
+                    name="instrument-opt"
+                    checked={selectedInstrument === 'custom'}
+                    onChange={() => setSelectedInstrument('custom')}
+                  />
+                  <span style={{ fontSize: '0.925rem', color: 'var(--text-primary)' }}>Alat Lainnya (Ketik Manual)</span>
+                </div>
+                {selectedInstrument === 'custom' && (
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Ketik jenis/nama alat musik..."
+                    value={customInstrument}
+                    onChange={(e) => setCustomInstrument(e.target.value)}
+                    style={{ marginTop: '0.5rem', width: '100%' }}
+                    autoFocus
+                  />
+                )}
+              </label>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setAcceptanceModalApp(null);
+                  setSelectedInstrument('');
+                  setCustomInstrument('');
+                }}
+                className="btn btn-outline"
+                style={{ flex: 1 }}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmAcceptance}
+                className="btn btn-accent"
+                style={{ flex: 1 }}
+              >
+                Konfirmasi Terima
+              </button>
+            </div>
           </div>
         </div>
       )}

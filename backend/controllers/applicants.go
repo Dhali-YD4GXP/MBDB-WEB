@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"crypto/rand"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -97,19 +98,30 @@ func (ac *ApplicantsController) Register(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// Generate unique registration code
+	regCode, err := ac.generateUniqueRegCode()
+	if err != nil {
+		// Clean up uploaded file if code generation fails
+		os.Remove(destPath)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to generate registration code"})
+		return
+	}
+
 	// Save applicant in database
 	// We store a relative URL path to make it easy for frontend to request it
 	fotoURL := fmt.Sprintf("/uploads/photos/%s", uniqueFilename)
 
 	applicant := models.Applicant{
-		Nama:      nama,
-		Kelas:     kelas,
-		FotoPath:  fotoURL,
-		Pilihan1:  pilihan1,
-		Pilihan2:  pilihan2,
-		Pilihan3:  pilihan3,
-		Status:    "Pending", // default
-		CreatedAt: time.Now(),
+		Nama:            nama,
+		Kelas:           kelas,
+		FotoPath:        fotoURL,
+		Pilihan1:        pilihan1,
+		Pilihan2:        pilihan2,
+		Pilihan3:        pilihan3,
+		Status:          "Pending", // default
+		KodePendaftaran: regCode,
+		CreatedAt:       time.Now(),
 	}
 
 	if err := ac.DB.Create(&applicant).Error; err != nil {
@@ -179,7 +191,8 @@ func (ac *ApplicantsController) UpdateStatus(w http.ResponseWriter, r *http.Requ
 	}
 
 	var req struct {
-		Status string `json:"status"` // "Accepted", "Rejected"
+		Status       string `json:"status"`        // "Accepted", "Rejected", "Pending"
+		AlatDiterima string `json:"alat_diterima"` // The instrument they are accepted in
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -191,7 +204,14 @@ func (ac *ApplicantsController) UpdateStatus(w http.ResponseWriter, r *http.Requ
 	req.Status = strings.Title(strings.ToLower(req.Status)) // Normalize (Accepted, Rejected, Pending)
 	if req.Status != "Accepted" && req.Status != "Rejected" && req.Status != "Pending" {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Status must be 'Accepted' or 'Rejected'"})
+		json.NewEncoder(w).Encode(map[string]string{"error": "Status must be 'Accepted', 'Rejected', or 'Pending'"})
+		return
+	}
+
+	// If accepted, we must ensure AlatDiterima is set.
+	if req.Status == "Accepted" && strings.TrimSpace(req.AlatDiterima) == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Silakan tentukan alat yang diterima"})
 		return
 	}
 
@@ -204,6 +224,12 @@ func (ac *ApplicantsController) UpdateStatus(w http.ResponseWriter, r *http.Requ
 
 	oldStatus := applicant.Status
 	applicant.Status = req.Status
+	if req.Status == "Accepted" {
+		applicant.AlatDiterima = req.AlatDiterima
+	} else {
+		applicant.AlatDiterima = "" // Clear it if not accepted
+	}
+
 	if err := ac.DB.Save(&applicant).Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to update status"})
@@ -215,7 +241,7 @@ func (ac *ApplicantsController) UpdateStatus(w http.ResponseWriter, r *http.Requ
 		newMember := models.Member{
 			Nama:      applicant.Nama,
 			Kelas:     applicant.Kelas,
-			Alat:      applicant.Pilihan1, // Pilihan utama alat
+			Alat:      req.AlatDiterima, // Use the accepted instrument
 			Status:    "Aktif",
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
@@ -260,7 +286,7 @@ func (ac *ApplicantsController) ExportCSV(w http.ResponseWriter, r *http.Request
 	defer writer.Flush()
 
 	// Write header row
-	header := []string{"ID", "Nama Lengkap", "Kelas", "Pilihan 1", "Pilihan 2", "Pilihan 3", "Status", "Foto Path", "Tanggal Daftar"}
+	header := []string{"ID", "Nama Lengkap", "Kelas", "Pilihan 1", "Pilihan 2", "Pilihan 3", "Status", "Alat Diterima", "Kode Pendaftaran", "Foto Path", "Tanggal Daftar"}
 	if err := writer.Write(header); err != nil {
 		return
 	}
@@ -275,11 +301,64 @@ func (ac *ApplicantsController) ExportCSV(w http.ResponseWriter, r *http.Request
 			app.Pilihan2,
 			app.Pilihan3,
 			app.Status,
+			app.AlatDiterima,
+			app.KodePendaftaran,
 			app.FotoPath,
 			app.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
 		if err := writer.Write(row); err != nil {
 			return
+		}
+	}
+}
+
+// GetStatus retrieves applicant status by KodePendaftaran (Public)
+func (ac *ApplicantsController) GetStatus(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	code := r.PathValue("code")
+	if code == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Registration code is required"})
+		return
+	}
+
+	var applicant models.Applicant
+	if err := ac.DB.Where("kode_pendaftaran = ?", code).First(&applicant).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Pendaftaran tidak ditemukan"})
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Gagal mengambil status pendaftaran"})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(applicant)
+}
+
+// generateUniqueRegCode helper function to create a unique REG-XXXXXX registration code
+func (ac *ApplicantsController) generateUniqueRegCode() (string, error) {
+	const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	for {
+		bytes := make([]byte, 6)
+		if _, err := rand.Read(bytes); err != nil {
+			return "", err
+		}
+		for i, b := range bytes {
+			bytes[i] = chars[b%byte(len(chars))]
+		}
+		code := "REG-" + string(bytes)
+
+		// Check if it already exists in the database
+		var count int64
+		if err := ac.DB.Model(&models.Applicant{}).Where("kode_pendaftaran = ?", code).Count(&count).Error; err != nil {
+			return "", err
+		}
+		if count == 0 {
+			return code, nil
 		}
 	}
 }

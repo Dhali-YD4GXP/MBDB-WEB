@@ -32,6 +32,7 @@ func SetupRoutes(db *gorm.DB) *http.ServeMux {
 	mux.HandleFunc("GET /api/org-structure", orgCtrl.Get)
 	mux.HandleFunc("GET /api/public/practice-sessions/{token}", practiceSessCtrl.GetByToken)
 	mux.HandleFunc("POST /api/public/practice-sessions/{token}/attend", practiceSessCtrl.Attend)
+	mux.HandleFunc("GET /api/applicants/status/{code}", appCtrl.GetStatus)
 
 	// Static route for serving uploaded pas fotos securely
 	uploadDir := os.Getenv("UPLOAD_DIR")

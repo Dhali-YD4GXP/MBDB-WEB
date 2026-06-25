@@ -14,6 +14,8 @@ export interface Applicant {
   pilihan2: string;
   pilihan3: string;
   status: 'Pending' | 'Accepted' | 'Rejected';
+  kode_pendaftaran?: string;
+  alat_diterima?: string;
   created_at: string;
 }
 
