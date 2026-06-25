@@ -500,13 +500,10 @@ export default function OrganisasiPage() {
               ].map((pos, idx) => (
                 <div
                   key={idx}
+                  className="org-edit-row"
                   style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '1rem',
                     paddingBottom: '1.5rem',
                     borderBottom: '1px solid var(--border-color)',
-                    ...({ '@media (min-width: 640px)': { flexDirection: 'row', alignItems: 'center' } } as any),
                   }}
                 >
                   <div style={{ flex: 1 }}>
@@ -588,6 +585,17 @@ export default function OrganisasiPage() {
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+        .org-edit-row {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+        @media (min-width: 640px) {
+          .org-edit-row {
+            flex-direction: row;
+            align-items: center;
+          }
         }
       `}</style>
     </div>

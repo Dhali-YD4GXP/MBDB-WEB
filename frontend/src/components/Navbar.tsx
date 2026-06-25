@@ -11,6 +11,7 @@ export default function Navbar() {
   const [role, setRole] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     // Read from localStorage on mount and when pathname changes
@@ -46,12 +47,12 @@ export default function Navbar() {
         top: 0,
         zIndex: 50,
         borderBottom: '1px solid var(--border-color)',
-        padding: '1rem 0',
+        padding: '0.75rem 0',
       }}
     >
       <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         {/* Brand/Logo */}
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
           <img
             src="/logo.png"
             alt="Logo MBDB"
@@ -65,7 +66,7 @@ export default function Navbar() {
           />
           <span
             style={{
-              fontSize: '1.2rem',
+              fontSize: '1.15rem',
               fontWeight: 800,
               fontFamily: 'var(--font-display)',
               background: 'linear-gradient(135deg, var(--accent) 0%, #ffb300 100%)',
@@ -79,12 +80,12 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Navigation */}
-        <div style={{ display: 'none', alignItems: 'center', gap: '1.5rem' }} className="desktop-nav">
+        <div style={{ display: 'none', alignItems: 'center', gap: '1.25rem' }} className="desktop-nav">
           <Link
             href="/"
             style={{
               fontSize: '0.875rem',
-              fontWeight: 500,
+              fontWeight: 600,
               color: pathname === '/' ? 'var(--accent)' : 'var(--text-secondary)',
             }}
           >
@@ -94,17 +95,17 @@ export default function Navbar() {
             href="/organisasi"
             style={{
               fontSize: '0.875rem',
-              fontWeight: 500,
+              fontWeight: 600,
               color: pathname === '/organisasi' ? 'var(--accent)' : 'var(--text-secondary)',
             }}
           >
-            Struktur Organisasi
+            Struktur
           </Link>
           <Link
             href="/pendaftaran"
             style={{
               fontSize: '0.875rem',
-              fontWeight: 500,
+              fontWeight: 600,
               color: pathname === '/pendaftaran' ? 'var(--accent)' : 'var(--text-secondary)',
             }}
           >
@@ -117,98 +118,178 @@ export default function Navbar() {
                 href="/loading"
                 style={{
                   fontSize: '0.875rem',
-                  fontWeight: 500,
+                  fontWeight: 600,
                   color: pathname === '/loading' ? 'var(--accent)' : 'var(--text-secondary)',
                 }}
               >
                 Loading Logistik
               </Link>
-              <Link
-                href="/instruments"
-                style={{
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  color: pathname === '/instruments' ? 'var(--accent)' : 'var(--text-secondary)',
-                }}
+              
+              {/* Dropdown Menu for Management */}
+              <div
+                style={{ position: 'relative' }}
+                onMouseEnter={() => setIsDropdownOpen(true)}
+                onMouseLeave={() => setIsDropdownOpen(false)}
               >
-                Inventaris Alat
-              </Link>
-              <Link
-                href="/anggota"
-                style={{
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  color: pathname === '/anggota' ? 'var(--accent)' : 'var(--text-secondary)',
-                }}
-              >
-                Anggota
-              </Link>
-            </>
-          )}
+                <button
+                  style={{
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: isDropdownOpen || ['/instruments', '/anggota', '/finance', '/admin', '/admin/register-official', '/practice-sessions'].includes(pathname) ? 'var(--accent)' : 'var(--text-secondary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                    padding: '0.5rem 0',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                >
+                  🛠️ Kelola Menu <span style={{ fontSize: '0.7rem' }}>▼</span>
+                </button>
 
-          {token && (role === 'Bendahara' || role === 'Admin') && (
-            <Link
-              href="/finance"
-              style={{
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                color: pathname === '/finance' ? 'var(--accent)' : 'var(--text-secondary)',
-              }}
-            >
-              Keuangan
-            </Link>
-          )}
+                {isDropdownOpen && (
+                  <div
+                    className="glass card"
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      right: 0,
+                      minWidth: '220px',
+                      padding: '0.5rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.25rem',
+                      boxShadow: 'var(--shadow-lg)',
+                      borderRadius: 'var(--radius-md)',
+                      border: '1px solid var(--border-color)',
+                      zIndex: 100,
+                      backgroundColor: 'var(--bg-secondary)',
+                    }}
+                  >
+                    <Link
+                      href="/instruments"
+                      onClick={() => setIsDropdownOpen(false)}
+                      style={{
+                        fontSize: '0.85rem',
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: pathname === '/instruments' ? 'var(--primary-light)' : 'transparent',
+                        color: pathname === '/instruments' ? 'var(--primary)' : 'var(--text-primary)',
+                        fontWeight: 500,
+                      }}
+                      className="dropdown-item"
+                    >
+                      🎺 Inventaris Alat
+                    </Link>
 
-          {token && role === 'Admin' && (
-            <>
-              <Link
-                href="/admin"
-                style={{
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  color: pathname === '/admin' ? 'var(--accent)' : 'var(--text-secondary)',
-                }}
-              >
-                Panel Pendaftar
-              </Link>
-              <Link
-                href="/admin/register-official"
-                style={{
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  color: pathname === '/admin/register-official' ? 'var(--accent)' : 'var(--text-secondary)',
-                }}
-              >
-                Tambah Official
-              </Link>
-              <Link
-                href="/practice-sessions"
-                style={{
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  color: pathname === '/practice-sessions' ? 'var(--accent)' : 'var(--text-secondary)',
-                }}
-              >
-                Sesi Latihan
-              </Link>
+                    <Link
+                      href="/anggota"
+                      onClick={() => setIsDropdownOpen(false)}
+                      style={{
+                        fontSize: '0.85rem',
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: pathname === '/anggota' ? 'var(--primary-light)' : 'transparent',
+                        color: pathname === '/anggota' ? 'var(--primary)' : 'var(--text-primary)',
+                        fontWeight: 500,
+                      }}
+                      className="dropdown-item"
+                    >
+                      👥 Daftar Anggota
+                    </Link>
+
+                    {(role === 'Bendahara' || role === 'Admin') && (
+                      <Link
+                        href="/finance"
+                        onClick={() => setIsDropdownOpen(false)}
+                        style={{
+                          fontSize: '0.85rem',
+                          padding: '0.5rem 0.75rem',
+                          borderRadius: 'var(--radius-sm)',
+                          backgroundColor: pathname === '/finance' ? 'var(--primary-light)' : 'transparent',
+                          color: pathname === '/finance' ? 'var(--primary)' : 'var(--text-primary)',
+                          fontWeight: 500,
+                        }}
+                        className="dropdown-item"
+                      >
+                        💰 Keuangan Kas
+                      </Link>
+                    )}
+
+                    {role === 'Admin' && (
+                      <>
+                        <hr style={{ border: 'none', borderTop: '1px solid var(--border-color)', margin: '0.25rem 0' }} />
+                        
+                        <Link
+                          href="/admin"
+                          onClick={() => setIsDropdownOpen(false)}
+                          style={{
+                            fontSize: '0.85rem',
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: 'var(--radius-sm)',
+                            backgroundColor: pathname === '/admin' ? 'var(--primary-light)' : 'transparent',
+                            color: pathname === '/admin' ? 'var(--primary)' : 'var(--text-primary)',
+                            fontWeight: 500,
+                          }}
+                          className="dropdown-item"
+                        >
+                          📂 Panel Pendaftar
+                        </Link>
+
+                        <Link
+                          href="/admin/register-official"
+                          onClick={() => setIsDropdownOpen(false)}
+                          style={{
+                            fontSize: '0.85rem',
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: 'var(--radius-sm)',
+                            backgroundColor: pathname === '/admin/register-official' ? 'var(--primary-light)' : 'transparent',
+                            color: pathname === '/admin/register-official' ? 'var(--primary)' : 'var(--text-primary)',
+                            fontWeight: 500,
+                          }}
+                          className="dropdown-item"
+                        >
+                          👤 Tambah Official
+                        </Link>
+
+                        <Link
+                          href="/practice-sessions"
+                          onClick={() => setIsDropdownOpen(false)}
+                          style={{
+                            fontSize: '0.85rem',
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: 'var(--radius-sm)',
+                            backgroundColor: pathname === '/practice-sessions' ? 'var(--primary-light)' : 'transparent',
+                            color: pathname === '/practice-sessions' ? 'var(--primary)' : 'var(--text-primary)',
+                            fontWeight: 500,
+                          }}
+                          className="dropdown-item"
+                        >
+                          ⏱️ Sesi Latihan
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </>
           )}
 
           {token ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                Halo, <strong>{username}</strong> ({role})
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: '0.5rem' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={`${username} (${role})`}>
+                Halo, <strong>{username}</strong>
               </span>
               <button
                 onClick={handleLogout}
                 className="btn btn-outline"
-                style={{ padding: '0.4rem 1rem', fontSize: '0.875rem' }}
+                style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }}
               >
                 Keluar
               </button>
             </div>
           ) : (
-            <Link href="/login" className="btn btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.875rem' }}>
+            <Link href="/login" className="btn btn-primary" style={{ padding: '0.4rem 1rem', fontSize: '0.8125rem' }}>
               Login Staff
             </Link>
           )}
@@ -390,6 +471,15 @@ export default function Navbar() {
           background: none;
           border: none;
           cursor: pointer;
+        }
+        .dropdown-item {
+          transition: all var(--transition-fast) !important;
+          display: block;
+        }
+        .dropdown-item:hover {
+          background-color: var(--primary-light) !important;
+          color: var(--primary) !important;
+          padding-left: 1rem !important;
         }
         @media (min-width: 768px) {
           .desktop-nav {

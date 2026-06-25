@@ -176,7 +176,7 @@ export default function FinancePage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
             
             {/* 1. Metrics Banner */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem', ...({ '@media (min-width: 768px)': { gridTemplateColumns: 'repeat(3, 1fr)' } } as any) }} className="metrics-grid">
+            <div style={{ display: 'grid', gap: '1.5rem' }} className="metrics-grid">
               
               {/* Cash In */}
               <div className="card glass" style={{ borderLeft: '4px solid var(--success)' }}>
@@ -216,7 +216,7 @@ export default function FinancePage() {
             </div>
 
             {/* 2. Split Screen: Record Form & History Log */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem', ...({ '@media (min-width: 1024px)': { gridTemplateColumns: '1fr 2fr' } } as any) }} className="main-grid">
+            <div style={{ display: 'grid', gap: '2rem' }} className="main-grid">
               
               {/* Left Column: Form */}
               <div>

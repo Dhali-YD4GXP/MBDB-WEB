@@ -343,7 +343,7 @@ export default function LoadingPage() {
               </div>
 
               {/* Counters */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', textAlign: 'center' }}>
+              <div className="session-counters" style={{ textAlign: 'center' }}>
                 <div style={{ padding: '1rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)' }}>
                   <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
                     ALAT KELUAR
@@ -377,7 +377,7 @@ export default function LoadingPage() {
             </div>
 
             {/* Split Screen: Missing Instruments & Audit Trail Logs */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem', ...({ '@media (min-width: 1024px)': { gridTemplateColumns: '1fr 1.2fr' } } as any) }} className="main-grid">
+            <div style={{ display: 'grid', gap: '2rem' }} className="main-grid">
               {/* Left Column: Missing Instruments List */}
               <div>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -396,10 +396,8 @@ export default function LoadingPage() {
                     activeSession.remaining_details.map((inst) => (
                       <div
                         key={inst.id}
+                        className="active-inst-card"
                         style={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
                           padding: '1rem',
                           backgroundColor: 'var(--bg-secondary)',
                           borderLeft: '4px solid var(--warning)',
@@ -475,7 +473,7 @@ export default function LoadingPage() {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div>
                               <strong>{log.jenis_alat}</strong>{' '}
-                              <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>
+                              <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)', fontSize: '0.75rem', wordBreak: 'break-all' }}>
                                 ({log.instrument_id})
                               </span>
                             </div>
@@ -522,13 +520,8 @@ export default function LoadingPage() {
               {pastSessions.map((session) => (
                 <div
                   key={session.id}
-                  className="card"
+                  className="card flex-row-desktop"
                   style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: '1rem',
                     padding: '1.25rem 1.5rem',
                     borderColor: session.is_active ? 'var(--accent)' : 'var(--border-color)',
                   }}
@@ -647,7 +640,7 @@ export default function LoadingPage() {
             </div>
 
             {/* Columns split for past detail */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem', ...({ '@media (min-width: 768px)': { gridTemplateColumns: '1fr 1fr' } } as any) }} className="past-detail-grid">
+            <div style={{ display: 'grid', gap: '1.5rem' }} className="past-detail-grid">
               <div>
                 <h4 style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.75rem', color: 'var(--danger)' }}>
                   ⚠️ Alat Belum Kembali Pada Sesi Ini
@@ -704,14 +697,49 @@ export default function LoadingPage() {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
-        @media (min-width: 1024px) {
-          .main-grid {
-            grid-template-columns: 1fr 1.2fr !important;
+        .session-counters {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 0.75rem;
+        }
+        .active-inst-card {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+        .flex-row-desktop {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+        @media (min-width: 480px) {
+          .session-counters {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+          }
+        }
+        @media (min-width: 576px) {
+          .active-inst-card {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+          }
+        }
+        @media (min-width: 640px) {
+          .flex-row-desktop {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
           }
         }
         @media (min-width: 768px) {
           .past-detail-grid {
             grid-template-columns: 1fr 1fr !important;
+          }
+        }
+        @media (min-width: 1024px) {
+          .main-grid {
+            grid-template-columns: 1fr 1.2fr !important;
           }
         }
       `}</style>

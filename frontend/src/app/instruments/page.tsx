@@ -189,7 +189,7 @@ export default function InstrumentsPage() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem', ...({ '@media (min-width: 1024px)': { gridTemplateColumns: '1fr 2fr' } } as any) }} className="main-grid">
+        <div style={{ display: 'grid', gap: '2rem' }} className="main-grid">
           {/* Left Column: Register New Instrument */}
           <div>
             <div className="card glass" style={{ position: 'sticky', top: '100px' }}>
@@ -314,19 +314,14 @@ export default function InstrumentsPage() {
                 {filteredInstruments.map((inst) => (
                   <div
                     key={inst.id}
-                    className="card animate-fade-in"
+                    className="card animate-fade-in flex-row-desktop"
                     style={{
                       padding: '1.25rem 1.5rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      flexWrap: 'wrap',
-                      gap: '1rem',
                     }}
                   >
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
-                        <span style={{ fontSize: '0.825rem', fontFamily: 'var(--font-mono)', padding: '0.15rem 0.5rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: 'var(--radius-sm)', fontWeight: 600 }}>
+                        <span style={{ fontSize: '0.825rem', fontFamily: 'var(--font-mono)', padding: '0.15rem 0.5rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: 'var(--radius-sm)', fontWeight: 600, wordBreak: 'break-all' }}>
                           {inst.id}
                         </span>
                         <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{inst.jenis_alat}</h3>
@@ -450,6 +445,18 @@ export default function InstrumentsPage() {
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+        .flex-row-desktop {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+        @media (min-width: 640px) {
+          .flex-row-desktop {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+          }
         }
         @media (min-width: 1024px) {
           .main-grid {
