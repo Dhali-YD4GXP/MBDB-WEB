@@ -100,12 +100,12 @@
     ]
   },
   {
-    "route": "/pendaftaran",
-    "firstLoadUncompressedJsBytes": 549125,
+    "route": "/admin",
+    "firstLoadUncompressedJsBytes": 548691,
     "firstLoadChunkPaths": [
       ".next/static/chunks/0meacxkx4t0gc.js",
       ".next/static/chunks/14mrh2-p_w84d.js",
-      ".next/static/chunks/3zfxdmk7n92eh.js",
+      ".next/static/chunks/3-bwbgdydky5g.js",
       ".next/static/chunks/1gdoryk6w2r8v.js",
       ".next/static/chunks/27jktro2p5rq9.js",
       ".next/static/chunks/2nykiepra7i1k.js",
@@ -114,12 +114,12 @@
     ]
   },
   {
-    "route": "/admin",
-    "firstLoadUncompressedJsBytes": 548691,
+    "route": "/pendaftaran",
+    "firstLoadUncompressedJsBytes": 548523,
     "firstLoadChunkPaths": [
       ".next/static/chunks/0meacxkx4t0gc.js",
       ".next/static/chunks/14mrh2-p_w84d.js",
-      ".next/static/chunks/3-bwbgdydky5g.js",
+      ".next/static/chunks/3e7z4-mcr_d3d.js",
       ".next/static/chunks/1gdoryk6w2r8v.js",
       ".next/static/chunks/27jktro2p5rq9.js",
       ".next/static/chunks/2nykiepra7i1k.js",

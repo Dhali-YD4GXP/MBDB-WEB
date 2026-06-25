@@ -3,24 +3,6 @@
 import React, { useState, useRef } from 'react';
 import { api } from '../../utils/api';
 
-const INSTRUMENT_OPTIONS = [
-  'Trumpet',
-  'Mellophone',
-  'Trombone',
-  'Euphonium',
-  'Tuba',
-  'Snare Drum',
-  'Multi Tenor (Quarto)',
-  'Bass Drum',
-  'Cymbals',
-  'Marimba',
-  'Vibraphone',
-  'Xylophone',
-  'Glockenspiel',
-  'Timpani',
-  'Colorguard (Bendera/Senjata)',
-];
-
 export default function RegisterMember() {
   const [nama, setNama] = useState('');
   const [kelas, setKelas] = useState('');
@@ -232,56 +214,41 @@ export default function RegisterMember() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.25rem' }} className="pilihan-grid">
                 <div className="form-group">
                   <label className="form-label">Pilihan 1 (Prioritas Utama)</label>
-                  <select
+                  <input
+                    type="text"
                     className="form-input"
+                    placeholder="Contoh: Snare Drum, Trumpet, Colorguard"
                     value={pilihan1}
                     onChange={(e) => setPilihan1(e.target.value)}
                     required
                     disabled={isLoading}
-                  >
-                    <option value="">-- Pilih Alat --</option>
-                    {INSTRUMENT_OPTIONS.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">Pilihan 2</label>
-                  <select
+                  <input
+                    type="text"
                     className="form-input"
+                    placeholder="Contoh: Tenor Drum, Mellophone"
                     value={pilihan2}
                     onChange={(e) => setPilihan2(e.target.value)}
                     required
                     disabled={isLoading}
-                  >
-                    <option value="">-- Pilih Alat --</option>
-                    {INSTRUMENT_OPTIONS.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">Pilihan 3</label>
-                  <select
+                  <input
+                    type="text"
                     className="form-input"
+                    placeholder="Contoh: Bass Drum, Cymbal, Tuba"
                     value={pilihan3}
                     onChange={(e) => setPilihan3(e.target.value)}
                     required
                     disabled={isLoading}
-                  >
-                    <option value="">-- Pilih Alat --</option>
-                    {INSTRUMENT_OPTIONS.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
               </div>
             </div>
