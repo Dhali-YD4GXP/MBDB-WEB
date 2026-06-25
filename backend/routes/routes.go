@@ -49,6 +49,7 @@ func SetupRoutes(db *gorm.DB) *http.ServeMux {
 	mux.Handle("POST /api/auth/register-official", adminAuth(http.HandlerFunc(authCtrl.RegisterOfficial)))
 	mux.Handle("GET /api/applicants", adminAuth(http.HandlerFunc(appCtrl.List)))
 	mux.Handle("PUT /api/applicants/{id}/status", adminAuth(http.HandlerFunc(appCtrl.UpdateStatus)))
+	mux.Handle("DELETE /api/applicants/{id}", adminAuth(http.HandlerFunc(appCtrl.Delete)))
 	mux.Handle("GET /api/applicants/export", adminAuth(http.HandlerFunc(appCtrl.ExportCSV)))
 	mux.Handle("DELETE /api/instruments/{id}", adminAuth(http.HandlerFunc(instCtrl.Delete)))
 	

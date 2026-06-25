@@ -362,3 +362,50 @@ func (ac *ApplicantsController) generateUniqueRegCode() (string, error) {
 		}
 	}
 }
+
+// Delete removes an applicant and their pas foto from disk (Admin Only)
+func (ac *ApplicantsController) Delete(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	currentUser, err := middleware.GetUserFromContext(r)
+	if err != nil || currentUser.Role != "Admin" {
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Only Admins can delete applicants"})
+		return
+	}
+
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid applicant ID"})
+		return
+	}
+
+	var applicant models.Applicant
+	if err := ac.DB.First(&applicant, id).Error; err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Applicant not found"})
+		return
+	}
+
+	// Try to delete the photo file
+	if applicant.FotoPath != "" {
+		filename := filepath.Base(applicant.FotoPath)
+		uploadDir := os.Getenv("UPLOAD_DIR")
+		if uploadDir == "" {
+			uploadDir = "./uploads/photos"
+		}
+		filePath := filepath.Join(uploadDir, filename)
+		_ = os.Remove(filePath) // delete, ignore error if file doesn't exist
+	}
+
+	if err := ac.DB.Delete(&applicant).Error; err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to delete applicant from database"})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Applicant successfully deleted"})
+}

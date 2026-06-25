@@ -93,6 +93,18 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteApplicant = async (id: number) => {
+    if (!confirm('Apakah Anda yakin ingin menghapus data pendaftar ini secara permanen?')) return;
+    setErrorMsg(null);
+    try {
+      await api.delete(`/api/applicants/${id}`);
+      // Remove from local list
+      setApplicants((prev) => prev.filter((app) => app.id !== id));
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Gagal menghapus data pendaftar.');
+    }
+  };
+
   const handleExportCSV = async () => {
     setErrorMsg(null);
     try {
@@ -359,26 +371,44 @@ export default function AdminDashboard() {
                           setAcceptanceModalApp(app);
                         }}
                         className="btn btn-primary"
-                        style={{ flex: 1, padding: '0.5rem', fontSize: '0.875rem', backgroundColor: 'var(--success)' }}
+                        style={{ flex: 2, padding: '0.5rem', fontSize: '0.875rem', backgroundColor: 'var(--success)' }}
                       >
                         ✓ Terima
                       </button>
                       <button
                         onClick={() => handleUpdateStatus(app.id, 'Rejected')}
                         className="btn btn-secondary"
-                        style={{ flex: 1, padding: '0.5rem', fontSize: '0.875rem', color: 'var(--danger)' }}
+                        style={{ flex: 1.5, padding: '0.5rem', fontSize: '0.875rem', color: 'var(--danger)' }}
                       >
                         ✕ Tolak
                       </button>
+                      <button
+                        onClick={() => handleDeleteApplicant(app.id)}
+                        className="btn btn-secondary"
+                        style={{ flex: 1, padding: '0.5rem', fontSize: '0.875rem', color: 'var(--danger)', borderColor: 'var(--danger-light)' }}
+                        title="Hapus secara permanen"
+                      >
+                        🗑️
+                      </button>
                     </>
                   ) : (
-                    <button
-                      onClick={() => handleUpdateStatus(app.id, 'Pending')}
-                      className="btn btn-outline"
-                      style={{ flex: 1, padding: '0.4rem', fontSize: '0.825rem' }}
-                    >
-                      Pulihkan ke Pending
-                    </button>
+                    <>
+                      <button
+                        onClick={() => handleUpdateStatus(app.id, 'Pending')}
+                        className="btn btn-outline"
+                        style={{ flex: 3, padding: '0.4rem', fontSize: '0.825rem' }}
+                      >
+                        Pulihkan ke Pending
+                      </button>
+                      <button
+                        onClick={() => handleDeleteApplicant(app.id)}
+                        className="btn btn-secondary"
+                        style={{ flex: 1.5, padding: '0.4rem', fontSize: '0.825rem', color: 'var(--danger)', borderColor: 'var(--danger-light)' }}
+                        title="Hapus secara permanen"
+                      >
+                        🗑️ Hapus
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
