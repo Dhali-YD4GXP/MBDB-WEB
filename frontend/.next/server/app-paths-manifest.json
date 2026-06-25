@@ -4,6 +4,7 @@
   "/admin/page": "app/admin/page.js",
   "/admin/register-official/page": "app/admin/register-official/page.js",
   "/anggota/page": "app/anggota/page.js",
+  "/competition-sessions/page": "app/competition-sessions/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
   "/finance/page": "app/finance/page.js",
   "/instruments/page": "app/instruments/page.js",

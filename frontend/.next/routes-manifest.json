@@ -60,6 +60,12 @@
       "namedRegex": "^/anggota(?:/)?$"
     },
     {
+      "page": "/competition-sessions",
+      "regex": "^/competition\\-sessions(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/competition\\-sessions(?:/)?$"
+    },
+    {
       "page": "/favicon.ico",
       "regex": "^/favicon\\.ico(?:/)?$",
       "routeKeys": {},

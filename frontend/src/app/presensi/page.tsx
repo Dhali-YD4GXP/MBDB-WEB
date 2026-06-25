@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { CompetitionRoster } from '../../types';
 
 interface ActiveSession {
   id: number;
@@ -16,7 +17,11 @@ function PresensiForm() {
   const router = useRouter();
   const token = searchParams.get('token');
 
-  const [session, setSession] = useState<ActiveSession | null>(null);
+  const [session, setSession] = useState<any | null>(null);
+  const [isCompetition, setIsCompetition] = useState(false);
+  const [competitionRoster, setCompetitionRoster] = useState<CompetitionRoster[]>([]);
+  const [selectedRosterId, setSelectedRosterId] = useState<number | null>(null);
+
   const [isValidating, setIsValidating] = useState(true);
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -40,17 +45,31 @@ function PresensiForm() {
     setIsValidating(true);
     setValidationError(null);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/public/practice-sessions/${tokenStr}`);
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Sesi presensi latihan tidak aktif atau tidak ditemukan');
+      // 1. Try practice session first
+      const practiceResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/public/practice-sessions/${tokenStr}`);
+      if (practiceResponse.ok) {
+        const data = await practiceResponse.json();
+        setSession(data);
+        setIsCompetition(false);
+        setIsValidating(false);
+        return;
       }
-      const data: ActiveSession = await response.json();
-      setSession(data);
+
+      // 2. Try competition session
+      const compResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/public/competition-sessions/${tokenStr}`);
+      if (compResponse.ok) {
+        const data = await compResponse.json();
+        setSession(data);
+        setIsCompetition(true);
+        setCompetitionRoster(data.roster || []);
+        setIsValidating(false);
+        return;
+      }
+
+      throw new Error('Sesi presensi latihan/lomba tidak aktif atau tidak ditemukan');
     } catch (err: any) {
       console.error(err);
-      setValidationError(err.message || 'Sesi presensi latihan tidak valid atau sudah ditutup');
-    } finally {
+      setValidationError(err.message || 'Sesi presensi tidak valid atau sudah ditutup');
       setIsValidating(false);
     }
   };
@@ -62,34 +81,71 @@ function PresensiForm() {
     setSubmitError(null);
     setIsSubmitting(true);
 
-    if (!nama.trim() || !alat.trim()) {
-      setSubmitError('Nama dan Alat wajib diisi');
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/public/practice-sessions/${token}/attend`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ nama, alat }),
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Gagal mengirim data presensi');
+    if (isCompetition) {
+      if (!selectedRosterId) {
+        setSubmitError('Silakan pilih nama Anda dari daftar');
+        setIsSubmitting(false);
+        return;
       }
 
-      setSubmitSuccess(true);
-    } catch (err: any) {
-      console.error(err);
-      setSubmitError(err.message || 'Terjadi kesalahan saat mengirim presensi');
-    } finally {
-      setIsSubmitting(false);
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/public/competition-sessions/${token}/attend`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ roster_id: selectedRosterId }),
+        });
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Gagal mengirim data presensi');
+        }
+
+        const resData = await response.json();
+        const attendedMember = resData.roster || {};
+        setNama(attendedMember.nama);
+        setAlat(attendedMember.alat);
+        setSubmitSuccess(true);
+      } catch (err: any) {
+        console.error(err);
+        setSubmitError(err.message || 'Terjadi kesalahan saat mengirim presensi');
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      if (!nama.trim() || !alat.trim()) {
+        setSubmitError('Nama dan Alat wajib diisi');
+        setIsSubmitting(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/public/practice-sessions/${token}/attend`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ nama, alat }),
+        });
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Gagal mengirim data presensi');
+        }
+
+        setSubmitSuccess(true);
+      } catch (err: any) {
+        console.error(err);
+        setSubmitError(err.message || 'Terjadi kesalahan saat mengirim presensi');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
+
+  const pendingRoster = competitionRoster.filter(r => !r.has_attended);
+  const attendedRoster = competitionRoster.filter(r => r.has_attended);
 
   if (isValidating) {
     return (
@@ -137,7 +193,7 @@ function PresensiForm() {
             Presensi Berhasil!
           </h2>
           <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6', marginBottom: '1.5rem' }}>
-            Halo <strong>{nama}</strong> ({alat}), presensi Anda di sesi <strong>{session?.title}</strong> telah berhasil dicatat. Selamat berlatih!
+            Halo <strong>{nama}</strong> ({alat}), presensi Anda di sesi {isCompetition ? 'lomba' : 'latihan'} <strong>{session?.title}</strong> telah berhasil dicatat. {isCompetition ? 'Selamat bertanding!' : 'Selamat berlatih!'}
           </p>
           <div style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)' }}>
             Waktu check-in: {new Date().toLocaleTimeString('id-ID')}
@@ -155,12 +211,14 @@ function PresensiForm() {
           }}
         >
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <span style={{ fontSize: '2.5rem', background: 'var(--accent-light)', padding: '0.5rem', borderRadius: '50%', display: 'inline-block', marginBottom: '1rem' }}>📝</span>
+            <span style={{ fontSize: '2.5rem', background: 'var(--accent-light)', padding: '0.5rem', borderRadius: '50%', display: 'inline-block', marginBottom: '1rem' }}>
+              {isCompetition ? '🏆' : '📝'}
+            </span>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, fontFamily: 'var(--font-display)' }}>
-              Presensi Latihan
+              {isCompetition ? 'Presensi Keberangkatan Lomba' : 'Presensi Latihan'}
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-              Sesi: <strong>{session?.title}</strong>
+              Acara: <strong>{session?.title}</strong>
             </p>
           </div>
 
@@ -171,48 +229,112 @@ function PresensiForm() {
           )}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Nama Lengkap</label>
-              <input
-                type="text"
-                required
-                placeholder="Masukkan nama lengkap Anda"
-                value={nama}
-                onChange={(e) => setNama(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-color)',
-                  background: 'var(--bg-primary)',
-                  color: 'var(--text-primary)',
-                }}
-              />
-            </div>
+            {isCompetition ? (
+              <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Pilih Nama Anda</label>
+                <select
+                  required
+                  value={selectedRosterId || ''}
+                  onChange={(e) => setSelectedRosterId(Number(e.target.value))}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--bg-primary)',
+                    color: 'var(--text-primary)',
+                    fontSize: '1rem',
+                  }}
+                >
+                  <option value="">-- Pilih Nama --</option>
+                  {pendingRoster.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.nama} ({r.alat})
+                    </option>
+                  ))}
+                </select>
+                {pendingRoster.length === 0 && (
+                  <p style={{ fontSize: '0.825rem', color: 'var(--success)', marginTop: '0.5rem' }}>
+                    Semua anggota terdaftar sudah melakukan presensi.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Nama Lengkap</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Masukkan nama lengkap Anda"
+                    value={nama}
+                    onChange={(e) => setNama(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-color)',
+                      background: 'var(--bg-primary)',
+                      color: 'var(--text-primary)',
+                    }}
+                  />
+                </div>
 
-            <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Alat Musik / Seksi</label>
-              <input
-                type="text"
-                required
-                placeholder="Contoh: Snare, Trumpet, Color Guard"
-                value={alat}
-                onChange={(e) => setAlat(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border-color)',
-                  background: 'var(--bg-primary)',
-                  color: 'var(--text-primary)',
-                }}
-              />
-            </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Alat Musik / Seksi</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Contoh: Snare, Trumpet, Color Guard"
+                    value={alat}
+                    onChange={(e) => setAlat(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-color)',
+                      background: 'var(--bg-primary)',
+                      color: 'var(--text-primary)',
+                    }}
+                  />
+                </div>
+              </>
+            )}
 
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem', padding: '0.85rem' }} disabled={isSubmitting}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ width: '100%', marginTop: '1rem', padding: '0.85rem' }}
+              disabled={isSubmitting || (isCompetition && pendingRoster.length === 0)}
+            >
               {isSubmitting ? 'Memproses...' : '✓ Kirim Presensi'}
             </button>
           </form>
+
+          {isCompetition && attendedRoster.length > 0 && (
+            <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
+              <h4 style={{ fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.75rem' }}>
+                Anggota yang Sudah Hadir ({attendedRoster.length})
+              </h4>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', maxHeight: '120px', overflowY: 'auto' }}>
+                {attendedRoster.map((r) => (
+                  <span
+                    key={r.id}
+                    style={{
+                      fontSize: '0.75rem',
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: 'var(--radius-sm)',
+                      backgroundColor: 'var(--success-light)',
+                      color: 'var(--success)',
+                      border: '1px solid rgba(16, 185, 129, 0.15)',
+                    }}
+                  >
+                    ✓ {r.nama} ({r.alat})
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

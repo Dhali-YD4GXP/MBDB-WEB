@@ -128,3 +128,26 @@ type Member struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+// CompetitionSession represents a competition event with attendance roster
+type CompetitionSession struct {
+	ID        uint                 `gorm:"primaryKey" json:"id"`
+	Title     string               `gorm:"not null;type:varchar(150)" json:"title"`
+	Token     string               `gorm:"unique;not null;type:varchar(100)" json:"token"` // Unique QR token
+	IsActive  bool                 `gorm:"not null;default:true" json:"is_active"`
+	CreatedAt time.Time            `json:"created_at"`
+	ClosedAt  *time.Time           `json:"closed_at,omitempty"`
+	Roster    []CompetitionRoster `gorm:"foreignKey:CompetitionSessionID;constraint:OnDelete:CASCADE" json:"roster,omitempty"`
+}
+
+// CompetitionRoster represents a member registered to participate in a competition session
+type CompetitionRoster struct {
+	ID                   uint       `gorm:"primaryKey" json:"id"`
+	CompetitionSessionID uint       `gorm:"not null" json:"competition_session_id"`
+	Nama                 string     `gorm:"not null;type:varchar(150)" json:"nama"`
+	Kelas                string     `gorm:"type:varchar(50)" json:"kelas"`
+	Alat                 string     `gorm:"not null;type:varchar(100)" json:"alat"`
+	Source               string     `gorm:"type:varchar(50);default:'Manual'" json:"source"` // "Aktif", "Alumni", "Manual"
+	HasAttended          bool       `gorm:"not null;default:false" json:"has_attended"`
+	AttendedAt           *time.Time `json:"attended_at,omitempty"`
+}

@@ -24,6 +24,7 @@ func SetupRoutes(db *gorm.DB) *http.ServeMux {
 	financeCtrl := &controllers.FinanceController{DB: db}
 	membersCtrl := &controllers.MembersController{DB: db}
 	practiceSessCtrl := &controllers.PracticeSessionsController{DB: db}
+	competCtrl := &controllers.CompetitionSessionsController{DB: db}
 
 	// 1. PUBLIC ROUTES
 	mux.HandleFunc("POST /api/auth/login", authCtrl.Login)
@@ -32,6 +33,8 @@ func SetupRoutes(db *gorm.DB) *http.ServeMux {
 	mux.HandleFunc("GET /api/org-structure", orgCtrl.Get)
 	mux.HandleFunc("GET /api/public/practice-sessions/{token}", practiceSessCtrl.GetByToken)
 	mux.HandleFunc("POST /api/public/practice-sessions/{token}/attend", practiceSessCtrl.Attend)
+	mux.HandleFunc("GET /api/public/competition-sessions/{token}", competCtrl.GetByToken)
+	mux.HandleFunc("POST /api/public/competition-sessions/{token}/attend", competCtrl.Attend)
 	mux.HandleFunc("GET /api/applicants/status/{code}", appCtrl.GetStatus)
 
 	// Static route for serving uploaded pas fotos securely
@@ -74,6 +77,12 @@ func SetupRoutes(db *gorm.DB) *http.ServeMux {
 	mux.Handle("GET /api/practice-sessions/{id}", adminAuth(http.HandlerFunc(practiceSessCtrl.Get)))
 	mux.Handle("PUT /api/practice-sessions/{id}/close", adminAuth(http.HandlerFunc(practiceSessCtrl.Close)))
 	mux.Handle("GET /api/practice-sessions/{id}/export", adminAuth(http.HandlerFunc(practiceSessCtrl.Export)))
+
+	// Competition Sessions management
+	mux.Handle("POST /api/competition-sessions", adminAuth(http.HandlerFunc(competCtrl.Create)))
+	mux.Handle("GET /api/competition-sessions", adminAuth(http.HandlerFunc(competCtrl.List)))
+	mux.Handle("GET /api/competition-sessions/{id}", adminAuth(http.HandlerFunc(competCtrl.Get)))
+	mux.Handle("PUT /api/competition-sessions/{id}/close", adminAuth(http.HandlerFunc(competCtrl.Close)))
 
 	// Members management
 	mux.Handle("POST /api/members", adminAuth(http.HandlerFunc(membersCtrl.Create)))

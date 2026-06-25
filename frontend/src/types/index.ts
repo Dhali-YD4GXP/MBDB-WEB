@@ -102,3 +102,31 @@ export interface FinanceSummary {
   total_keluar: number;
   saldo: number;
 }
+
+export interface CompetitionSession {
+  id: number;
+  title: string;
+  token: string;
+  is_active: boolean;
+  created_at: string;
+  closed_at?: string;
+  roster?: CompetitionRoster[];
+}
+
+export interface CompetitionRoster {
+  id?: number;
+  competition_session_id?: number;
+  nama: string;
+  kelas?: string;
+  alat: string;
+  source: 'Aktif' | 'Alumni' | 'Manual';
+  has_attended: boolean;
+  attended_at?: string;
+}
+
+export interface CompetitionDetailResponse {
+  session: CompetitionSession;
+  total_count: number;
+  attended_count: number;
+  is_complete: boolean;
+}

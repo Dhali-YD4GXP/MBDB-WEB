@@ -267,6 +267,22 @@ export default function Navbar() {
                         >
                           ⏱️ Sesi Latihan
                         </Link>
+
+                        <Link
+                          href="/competition-sessions"
+                          onClick={() => setIsDropdownOpen(false)}
+                          style={{
+                            fontSize: '0.85rem',
+                            padding: '0.5rem 0.75rem',
+                            borderRadius: 'var(--radius-sm)',
+                            backgroundColor: pathname === '/competition-sessions' ? 'var(--primary-light)' : 'transparent',
+                            color: pathname === '/competition-sessions' ? 'var(--primary)' : 'var(--text-primary)',
+                            fontWeight: 500,
+                          }}
+                          className="dropdown-item"
+                        >
+                          🏆 Presensi Lomba
+                        </Link>
                       </>
                     )}
                   </div>
@@ -436,6 +452,16 @@ export default function Navbar() {
                 }}
               >
                 Sesi Latihan
+              </Link>
+              <Link
+                href="/competition-sessions"
+                onClick={() => setIsMenuOpen(false)}
+                style={{
+                  fontWeight: 600,
+                  color: pathname === '/competition-sessions' ? 'var(--accent)' : 'var(--text-primary)',
+                }}
+              >
+                Presensi Lomba
               </Link>
             </>
           )}
