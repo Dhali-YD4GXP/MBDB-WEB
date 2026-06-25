@@ -1,0 +1,17 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/admin/page": "/admin",
+  "/admin/register-official/page": "/admin/register-official",
+  "/anggota/page": "/anggota",
+  "/favicon.ico/route": "/favicon.ico",
+  "/finance/page": "/finance",
+  "/instruments/page": "/instruments",
+  "/loading/page": "/loading",
+  "/login/page": "/login",
+  "/organisasi/page": "/organisasi",
+  "/page": "/",
+  "/pendaftaran/page": "/pendaftaran",
+  "/practice-sessions/page": "/practice-sessions",
+  "/presensi/page": "/presensi"
+}

@@ -1,0 +1,17 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/admin/register-official/page": "app/admin/register-official/page.js",
+  "/anggota/page": "app/anggota/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/finance/page": "app/finance/page.js",
+  "/instruments/page": "app/instruments/page.js",
+  "/loading/page": "app/loading/page.js",
+  "/login/page": "app/login/page.js",
+  "/organisasi/page": "app/organisasi/page.js",
+  "/page": "app/page.js",
+  "/pendaftaran/page": "app/pendaftaran/page.js",
+  "/practice-sessions/page": "app/practice-sessions/page.js",
+  "/presensi/page": "app/presensi/page.js"
+}

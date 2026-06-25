@@ -18,7 +18,8 @@ backend/uploads/photos/*
 
 # Frontend (Node / Next.js)
 frontend/node_modules/
-frontend/.next/
+frontend/.next/cache/
+!frontend/.next/
 frontend/out/
 frontend/build/
 frontend/.env

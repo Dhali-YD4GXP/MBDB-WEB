@@ -1,0 +1,15 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/anggota/layout,_N_T_/anggota/page,_N_T_/anggota"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/anggota/__PAGE__",
+    "/anggota",
+    "/_index",
+    "/_head"
+  ]
+}
