@@ -87,6 +87,59 @@ export default function LoadingPage() {
     }
   };
 
+  const handleOpenScanner = () => {
+    // Unlock Audio Context on user interaction
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContextClass) {
+        const audioCtx = new AudioContextClass();
+        (window as any).sharedAudioCtx = audioCtx;
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+      }
+    } catch (e) {
+      console.log('Error pre-unlocking audio:', e);
+    }
+    setIsScannerOpen(true);
+  };
+
+  const playNotificationSound = (type: 'success' | 'error') => {
+    try {
+      const audioCtx = (window as any).sharedAudioCtx || new (window.AudioContext || (window as any).webkitAudioContext)();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      
+      if (type === 'success') {
+        // Success sound: ascending double beep
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+        oscillator.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime + 0.25);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.25);
+      } else {
+        // Error sound: low buzzer sawtooth sound
+        oscillator.type = 'sawtooth';
+        oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
+        oscillator.frequency.setValueAtTime(100, audioCtx.currentTime + 0.15);
+        gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime + 0.35);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.35);
+      }
+    } catch (e) {
+      console.log('Error playing notification sound:', e);
+    }
+  };
+
   const handleCloseSession = async () => {
     if (!window.confirm('Apakah Anda yakin ingin MENUTUP sesi aktif ini? Semua alat yang belum kembali harus dipertanggungjawabkan.')) {
       return;
@@ -120,6 +173,9 @@ export default function LoadingPage() {
         type: 'success',
       });
       
+      // Play success SFX
+      playNotificationSound('success');
+      
       // Auto-hide message after 5 seconds
       setTimeout(() => setScanResultMsg(null), 5000);
       
@@ -130,6 +186,10 @@ export default function LoadingPage() {
         text: err.message || `Gagal mencatat pemindaian untuk ID: ${decodedText}`,
         type: 'error',
       });
+      
+      // Play error SFX
+      playNotificationSound('error');
+      
       setTimeout(() => setScanResultMsg(null), 6000);
     }
   };
@@ -320,7 +380,7 @@ export default function LoadingPage() {
 
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
                   <button
-                    onClick={() => setIsScannerOpen(true)}
+                    onClick={handleOpenScanner}
                     className="btn btn-accent"
                     style={{
                       padding: '0.8rem 1.5rem',
@@ -388,7 +448,7 @@ export default function LoadingPage() {
                 </h3>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '450px', overflowY: 'auto' }}>
-                  {activeSession.remaining_details.length === 0 ? (
+                  {(!activeSession.remaining_details || activeSession.remaining_details.length === 0) ? (
                     <div className="card" style={{ textAlign: 'center', padding: '2rem', color: 'var(--success)', fontWeight: 600 }}>
                       🎉 Semua alat sudah dikembalikan ke gudang!
                     </div>
@@ -436,7 +496,7 @@ export default function LoadingPage() {
                     padding: '1rem',
                   }}
                 >
-                  {activeSession.logs.length === 0 ? (
+                  {!activeSession.logs || activeSession.logs.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-tertiary)' }}>
                       Belum ada pemindaian yang dicatat pada sesi ini.
                     </div>
@@ -646,7 +706,7 @@ export default function LoadingPage() {
                   ⚠️ Alat Belum Kembali Pada Sesi Ini
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '250px', overflowY: 'auto' }}>
-                  {selectedPastSession.remaining_details.length === 0 ? (
+                  {!selectedPastSession.remaining_details || selectedPastSession.remaining_details.length === 0 ? (
                     <div style={{ fontSize: '0.875rem', color: 'var(--success)', fontWeight: 600 }}>
                       Tidak ada (Semua alat kembali lengkap).
                     </div>
@@ -668,7 +728,10 @@ export default function LoadingPage() {
                   📝 Audit Logs Pemindaian
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '250px', overflowY: 'auto' }}>
-                  {selectedPastSession.logs.map((log) => (
+                  {!selectedPastSession.logs ? (
+                    <div style={{ fontSize: '0.825rem', color: 'var(--text-tertiary)' }}>Tidak ada log pemindaian.</div>
+                  ) : (
+                    selectedPastSession.logs.map((log) => (
                     <div key={log.log_id} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.4rem', fontSize: '0.8rem' }}>
                       <div>
                         <strong>{log.jenis_alat}</strong> ({log.status})
@@ -676,7 +739,8 @@ export default function LoadingPage() {
                       </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{formatTimeOnly(log.timestamp)}</div>
                     </div>
-                  ))}
+                  )))
+                  }
                 </div>
               </div>
             </div>

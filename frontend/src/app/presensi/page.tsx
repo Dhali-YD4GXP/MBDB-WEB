@@ -74,6 +74,39 @@ function PresensiForm() {
     }
   };
 
+  const playChime = (type: 'success' | 'error') => {
+    try {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+      const audioCtx = new AudioContextClass();
+      
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      
+      if (type === 'success') {
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+        oscillator.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime + 0.25);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.25);
+      } else {
+        oscillator.type = 'sawtooth';
+        oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
+        oscillator.frequency.setValueAtTime(100, audioCtx.currentTime + 0.15);
+        gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0, audioCtx.currentTime + 0.35);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.35);
+      }
+    } catch (e) {
+      console.log('Error playing chime:', e);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
@@ -85,6 +118,7 @@ function PresensiForm() {
       if (!selectedRosterId) {
         setSubmitError('Silakan pilih nama Anda dari daftar');
         setIsSubmitting(false);
+        playChime('error');
         return;
       }
 
@@ -107,9 +141,11 @@ function PresensiForm() {
         setNama(attendedMember.nama);
         setAlat(attendedMember.alat);
         setSubmitSuccess(true);
+        playChime('success');
       } catch (err: any) {
         console.error(err);
         setSubmitError(err.message || 'Terjadi kesalahan saat mengirim presensi');
+        playChime('error');
       } finally {
         setIsSubmitting(false);
       }
@@ -117,6 +153,7 @@ function PresensiForm() {
       if (!nama.trim() || !alat.trim()) {
         setSubmitError('Nama dan Alat wajib diisi');
         setIsSubmitting(false);
+        playChime('error');
         return;
       }
 
@@ -135,9 +172,11 @@ function PresensiForm() {
         }
 
         setSubmitSuccess(true);
+        playChime('success');
       } catch (err: any) {
         console.error(err);
         setSubmitError(err.message || 'Terjadi kesalahan saat mengirim presensi');
+        playChime('error');
       } finally {
         setIsSubmitting(false);
       }

@@ -48,7 +48,10 @@ export default function QRScanner({
             
             // Beep sound feedback
             try {
-              const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+              const audioCtx = (window as any).sharedAudioCtx || new (window.AudioContext || (window as any).webkitAudioContext)();
+              if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+              }
               const oscillator = audioCtx.createOscillator();
               const gainNode = audioCtx.createGain();
               oscillator.connect(gainNode);
