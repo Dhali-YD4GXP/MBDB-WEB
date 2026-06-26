@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { jsPDF } from 'jspdf';
 import { api } from '../../utils/api';
 
 interface Member {
@@ -166,95 +167,65 @@ export default function MembersPage() {
     }
   };
 
-  const handlePrintNametag = (member: Member) => {
-    const printWindow = window.open('', '_blank', 'width=600,height=500');
-    if (!printWindow) {
-      alert('Gagal membuka jendela cetak. Pastikan pop-up blocker dinonaktifkan.');
-      return;
-    }
+  const handleDownloadNametag = (member: Member) => {
+    const canvas = document.createElement('canvas');
+    // 300 DPI for 9cm x 5.5cm: ~1063 x 650 pixels
+    canvas.width = 1063;
+    canvas.height = 650;
     
-    const doc = printWindow.document;
-    doc.write(`
-      <html>
-        <head>
-          <title>Nametag - ${member.nama}</title>
-          <style>
-            @page {
-              size: 9cm 5.5cm;
-              margin: 0;
-            }
-            body {
-              margin: 0;
-              padding: 0;
-              width: 9cm;
-              height: 5.5cm;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-family: 'Times New Roman', Times, serif;
-              background-color: #ffffff;
-              box-sizing: border-box;
-              -webkit-print-color-adjust: exact;
-            }
-            .card {
-              width: 8.4cm;
-              height: 4.9cm;
-              border: 2px solid #0f172a; /* Dark Navy border */
-              box-sizing: border-box;
-              padding: 0.3cm;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: space-around;
-              text-align: center;
-              background-color: #ffffff;
-            }
-            .nama {
-              font-size: 18pt;
-              font-weight: bold;
-              color: #000000;
-              text-transform: uppercase;
-              line-height: 1.2;
-              word-wrap: break-word;
-              max-width: 100%;
-            }
-            .kelas {
-              font-size: 14pt;
-              font-weight: normal;
-              color: #000000;
-              text-transform: uppercase;
-            }
-            .alat {
-              font-size: 14pt;
-              font-weight: normal;
-              color: #000000;
-              text-transform: uppercase;
-            }
-            .angkatan {
-              font-size: 12pt;
-              font-weight: normal;
-              color: #000000;
-              text-transform: uppercase;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="card">
-            <div class="nama">${member.nama}</div>
-            <div class="kelas">${member.kelas}</div>
-            <div class="alat">${member.alat || ''}</div>
-            <div class="angkatan">${member.angkatan || ''}</div>
-          </div>
-          <script>
-            window.onload = function() {
-              window.print();
-              setTimeout(function() { window.close(); }, 500);
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    doc.close();
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    // Fill white background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw Navy Border (equivalent to 0.3cm margin with 2px card border)
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineWidth = 8;
+    // 35px margin on all sides
+    ctx.strokeRect(35, 35, 993, 580);
+    
+    ctx.fillStyle = '#000000';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // 1. Nama
+    const namaText = member.nama.toUpperCase();
+    let namaFontSize = 42;
+    ctx.font = `bold ${namaFontSize}px "Times New Roman", Times, serif`;
+    // Scale font size down if name is too long
+    while (ctx.measureText(namaText).width > 880 && namaFontSize > 20) {
+      namaFontSize -= 2;
+      ctx.font = `bold ${namaFontSize}px "Times New Roman", Times, serif`;
+    }
+    ctx.fillText(namaText, 531.5, 180);
+    
+    // 2. Kelas
+    const kelasText = member.kelas.toUpperCase();
+    ctx.font = `32px "Times New Roman", Times, serif`;
+    ctx.fillText(kelasText, 531.5, 300);
+    
+    // 3. Alat
+    const alatText = (member.alat || '').toUpperCase();
+    ctx.font = `32px "Times New Roman", Times, serif`;
+    ctx.fillText(alatText, 531.5, 420);
+    
+    // 4. Angkatan
+    const angkatanText = (member.angkatan || '').toUpperCase();
+    ctx.font = `28px "Times New Roman", Times, serif`;
+    ctx.fillText(angkatanText, 531.5, 520);
+    
+    // Convert canvas to image and add to PDF
+    const imgData = canvas.toDataURL('image/png');
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'cm',
+      format: [9, 5.5]
+    });
+    
+    doc.addImage(imgData, 'PNG', 0, 0, 9, 5.5);
+    doc.save(`nametag_${member.nama.toLowerCase().replace(/\s+/g, '_')}.pdf`);
   };
 
   const activeCount = members.filter((m) => m.status === 'Aktif').length;
@@ -479,12 +450,12 @@ export default function MembersPage() {
                   </button>
                   {member.status === 'Aktif' && (
                     <button
-                      onClick={() => handlePrintNametag(member)}
+                      onClick={() => handleDownloadNametag(member)}
                       className="btn btn-outline"
                       style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', borderColor: 'var(--accent)', color: 'var(--accent)' }}
-                      title="Cetak nametag anggota"
+                      title="Unduh nametag anggota"
                     >
-                      📇 Nametag
+                      📥 Nametag
                     </button>
                   )}
                   {member.status === 'Aktif' ? (
