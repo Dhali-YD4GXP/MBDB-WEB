@@ -46,6 +46,7 @@ export default function RootLayout({
         >
           <div className="container">
             <p>&copy; {new Date().getFullYear()} MBDB Smansaagung - SMAN 1 Kayuagung. All Rights Reserved.</p>
+            <p style={{ fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.8 }}>Developed by Dhali Rozan Fadhaillah smansaagung 62</p>
           </div>
         </footer>
       </body>

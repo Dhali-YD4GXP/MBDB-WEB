@@ -432,7 +432,7 @@ export default function RegisterMember() {
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="Contoh: 2026 atau Angkatan 30"
+                    placeholder="Contoh: 62"
                     value={angkatan}
                     onChange={(e) => setAngkatan(e.target.value)}
                     required

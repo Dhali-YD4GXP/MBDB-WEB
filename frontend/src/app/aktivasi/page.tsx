@@ -390,7 +390,7 @@ export default function AktivasiPage() {
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="Contoh: 2024"
+                    placeholder="Contoh: 62"
                     value={lookupAngkatan}
                     onChange={(e) => setLookupAngkatan(e.target.value)}
                     required

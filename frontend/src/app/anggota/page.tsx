@@ -622,7 +622,7 @@ export default function MembersPage() {
                 <input
                   type="text"
                   required
-                  placeholder="Misal: 2026 atau Angkatan 30"
+                  placeholder="Misal: 62"
                   value={formData.angkatan}
                   onChange={(e) => setFormData({ ...formData, angkatan: e.target.value })}
                   style={{
