@@ -58,10 +58,11 @@ func (mc *MembersController) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Nama   string `json:"nama"`
-		Kelas  string `json:"kelas"`
-		Alat   string `json:"alat"`
-		Status string `json:"status"` // "Aktif" or "Alumni"
+		Nama     string `json:"nama"`
+		Kelas    string `json:"kelas"`
+		Alat     string `json:"alat"`
+		Status   string `json:"status"` // "Aktif" or "Alumni"
+		Angkatan string `json:"angkatan"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -74,6 +75,7 @@ func (mc *MembersController) Create(w http.ResponseWriter, r *http.Request) {
 	req.Kelas = strings.TrimSpace(req.Kelas)
 	req.Alat = strings.TrimSpace(req.Alat)
 	req.Status = strings.TrimSpace(req.Status)
+	req.Angkatan = strings.TrimSpace(req.Angkatan)
 
 	if req.Nama == "" || req.Kelas == "" || req.Alat == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -94,6 +96,7 @@ func (mc *MembersController) Create(w http.ResponseWriter, r *http.Request) {
 		Kelas:     req.Kelas,
 		Alat:      req.Alat,
 		Status:    req.Status,
+		Angkatan:  req.Angkatan,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -135,10 +138,11 @@ func (mc *MembersController) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		Nama   string `json:"nama"`
-		Kelas  string `json:"kelas"`
-		Alat   string `json:"alat"`
-		Status string `json:"status"` // "Aktif" or "Alumni"
+		Nama     string `json:"nama"`
+		Kelas    string `json:"kelas"`
+		Alat     string `json:"alat"`
+		Status   string `json:"status"` // "Aktif" or "Alumni"
+		Angkatan string `json:"angkatan"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -155,6 +159,9 @@ func (mc *MembersController) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.Alat != "" {
 		member.Alat = strings.TrimSpace(req.Alat)
+	}
+	if req.Angkatan != "" {
+		member.Angkatan = strings.TrimSpace(req.Angkatan)
 	}
 	if req.Status != "" {
 		req.Status = strings.TrimSpace(req.Status)

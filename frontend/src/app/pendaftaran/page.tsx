@@ -8,6 +8,7 @@ export default function RegisterMember() {
 
   const [nama, setNama] = useState('');
   const [kelas, setKelas] = useState('');
+  const [angkatan, setAngkatan] = useState('');
   const [pilihan1, setPilihan1] = useState('');
   const [pilihan2, setPilihan2] = useState('');
   const [pilihan3, setPilihan3] = useState('');
@@ -68,7 +69,7 @@ export default function RegisterMember() {
     setErrorMsg(null);
     setSuccessMsg(null);
 
-    if (!nama || !kelas || !pilihan1 || !pilihan2 || !pilihan3 || !foto) {
+    if (!nama || !kelas || !angkatan || !pilihan1 || !pilihan2 || !pilihan3 || !foto) {
       setErrorMsg('Semua data formulir dan pas foto wajib diisi.');
       setIsLoading(false);
       return;
@@ -83,6 +84,7 @@ export default function RegisterMember() {
     const formData = new FormData();
     formData.append('nama', nama);
     formData.append('kelas', kelas);
+    formData.append('angkatan', angkatan);
     formData.append('pilihan1', pilihan1);
     formData.append('pilihan2', pilihan2);
     formData.append('pilihan3', pilihan3);
@@ -98,6 +100,7 @@ export default function RegisterMember() {
       // Reset form
       setNama('');
       setKelas('');
+      setAngkatan('');
       setPilihan1('');
       setPilihan2('');
       setPilihan3('');
@@ -354,6 +357,20 @@ export default function RegisterMember() {
                     placeholder="Contoh: X IPA 1, XI IPS 3"
                     value={kelas}
                     onChange={(e) => setKelas(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+
+                {/* Angkatan */}
+                <div className="form-group">
+                  <label className="form-label">Angkatan (Tahun Masuk)</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Contoh: 2026 atau Angkatan 30"
+                    value={angkatan}
+                    onChange={(e) => setAngkatan(e.target.value)}
                     required
                     disabled={isLoading}
                   />
@@ -683,6 +700,10 @@ export default function RegisterMember() {
                       <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{statusResult.kelas}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'var(--text-tertiary)' }}>Angkatan</span>
+                      <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{statusResult.angkatan || '-'}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ color: 'var(--text-tertiary)' }}>Pilihan Alat 1</span>
                       <span style={{ color: 'var(--text-secondary)' }}>{statusResult.pilihan1}</span>
                     </div>
@@ -715,7 +736,7 @@ export default function RegisterMember() {
         }
         @media (min-width: 640px) {
           .form-grid {
-            grid-template-columns: 1fr 1fr !important;
+            grid-template-columns: repeat(3, 1fr) !important;
           }
           .foto-upload-section {
             flex-direction: row !important;

@@ -18,6 +18,7 @@ type Applicant struct {
 	ID        uint      `gorm:"primaryKey" json:"id"`
 	Nama      string    `gorm:"not null;type:varchar(150)" json:"nama"`
 	Kelas     string    `gorm:"not null;type:varchar(50)" json:"kelas"`
+	Angkatan  string    `gorm:"type:varchar(50)" json:"angkatan"`
 	FotoPath  string    `gorm:"not null;type:text" json:"foto_path"` // Static path to Pas Foto on VPS
 	Pilihan1  string    `gorm:"not null;type:varchar(100)" json:"pilihan1"` // Dropdown 1
 	Pilihan2  string    `gorm:"not null;type:varchar(100)" json:"pilihan2"` // Dropdown 2
@@ -125,6 +126,7 @@ type Member struct {
 	Kelas     string    `gorm:"not null;type:varchar(50)" json:"kelas"`
 	Alat      string    `gorm:"not null;type:varchar(100)" json:"alat"`
 	Status    string    `gorm:"not null;type:varchar(20);default:'Aktif'" json:"status"` // "Aktif" or "Alumni"
+	Angkatan  string    `gorm:"type:varchar(50)" json:"angkatan"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

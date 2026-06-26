@@ -45,11 +45,11 @@
   },
   {
     "route": "/pendaftaran",
-    "firstLoadUncompressedJsBytes": 561576,
+    "firstLoadUncompressedJsBytes": 562223,
     "firstLoadChunkPaths": [
       ".next/static/chunks/0157n_dodthib.js",
       ".next/static/chunks/14mrh2-p_w84d.js",
-      ".next/static/chunks/08a4_k14175ff.js",
+      ".next/static/chunks/3fagqa-qbs4q2.js",
       ".next/static/chunks/1gdoryk6w2r8v.js",
       ".next/static/chunks/27jktro2p5rq9.js",
       ".next/static/chunks/2nykiepra7i1k.js",
@@ -72,6 +72,34 @@
     ]
   },
   {
+    "route": "/admin",
+    "firstLoadUncompressedJsBytes": 557713,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/0157n_dodthib.js",
+      ".next/static/chunks/14mrh2-p_w84d.js",
+      ".next/static/chunks/1ywu1hiu_h4q_.js",
+      ".next/static/chunks/1gdoryk6w2r8v.js",
+      ".next/static/chunks/27jktro2p5rq9.js",
+      ".next/static/chunks/2nykiepra7i1k.js",
+      ".next/static/chunks/11oof8oxnxiv9.js",
+      ".next/static/chunks/turbopack-2pg_etpvov4o7.js"
+    ]
+  },
+  {
+    "route": "/anggota",
+    "firstLoadUncompressedJsBytes": 555801,
+    "firstLoadChunkPaths": [
+      ".next/static/chunks/0157n_dodthib.js",
+      ".next/static/chunks/14mrh2-p_w84d.js",
+      ".next/static/chunks/3d5o3ealxa9oj.js",
+      ".next/static/chunks/1gdoryk6w2r8v.js",
+      ".next/static/chunks/27jktro2p5rq9.js",
+      ".next/static/chunks/2nykiepra7i1k.js",
+      ".next/static/chunks/11oof8oxnxiv9.js",
+      ".next/static/chunks/turbopack-2pg_etpvov4o7.js"
+    ]
+  },
+  {
     "route": "/practice-sessions",
     "firstLoadUncompressedJsBytes": 554616,
     "firstLoadChunkPaths": [
@@ -86,40 +114,12 @@
     ]
   },
   {
-    "route": "/admin",
-    "firstLoadUncompressedJsBytes": 554405,
-    "firstLoadChunkPaths": [
-      ".next/static/chunks/0157n_dodthib.js",
-      ".next/static/chunks/14mrh2-p_w84d.js",
-      ".next/static/chunks/2ps82o7a7b3zd.js",
-      ".next/static/chunks/1gdoryk6w2r8v.js",
-      ".next/static/chunks/27jktro2p5rq9.js",
-      ".next/static/chunks/2nykiepra7i1k.js",
-      ".next/static/chunks/11oof8oxnxiv9.js",
-      ".next/static/chunks/turbopack-2pg_etpvov4o7.js"
-    ]
-  },
-  {
     "route": "/finance",
     "firstLoadUncompressedJsBytes": 552433,
     "firstLoadChunkPaths": [
       ".next/static/chunks/0157n_dodthib.js",
       ".next/static/chunks/14mrh2-p_w84d.js",
       ".next/static/chunks/0fn3lm-ro-prv.js",
-      ".next/static/chunks/1gdoryk6w2r8v.js",
-      ".next/static/chunks/27jktro2p5rq9.js",
-      ".next/static/chunks/2nykiepra7i1k.js",
-      ".next/static/chunks/11oof8oxnxiv9.js",
-      ".next/static/chunks/turbopack-2pg_etpvov4o7.js"
-    ]
-  },
-  {
-    "route": "/anggota",
-    "firstLoadUncompressedJsBytes": 552349,
-    "firstLoadChunkPaths": [
-      ".next/static/chunks/0157n_dodthib.js",
-      ".next/static/chunks/14mrh2-p_w84d.js",
-      ".next/static/chunks/0g60sv69fve20.js",
       ".next/static/chunks/1gdoryk6w2r8v.js",
       ".next/static/chunks/27jktro2p5rq9.js",
       ".next/static/chunks/2nykiepra7i1k.js",

@@ -38,13 +38,14 @@ func (ac *ApplicantsController) Register(w http.ResponseWriter, r *http.Request)
 
 	nama := r.FormValue("nama")
 	kelas := r.FormValue("kelas")
+	angkatan := r.FormValue("angkatan")
 	pilihan1 := r.FormValue("pilihan1")
 	pilihan2 := r.FormValue("pilihan2")
 	pilihan3 := r.FormValue("pilihan3")
 
-	if nama == "" || kelas == "" || pilihan1 == "" || pilihan2 == "" || pilihan3 == "" {
+	if nama == "" || kelas == "" || angkatan == "" || pilihan1 == "" || pilihan2 == "" || pilihan3 == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "All text fields (nama, kelas, pilihan1, pilihan2, pilihan3) are required"})
+		json.NewEncoder(w).Encode(map[string]string{"error": "All text fields (nama, kelas, angkatan, pilihan1, pilihan2, pilihan3) are required"})
 		return
 	}
 
@@ -115,6 +116,7 @@ func (ac *ApplicantsController) Register(w http.ResponseWriter, r *http.Request)
 	applicant := models.Applicant{
 		Nama:            nama,
 		Kelas:           kelas,
+		Angkatan:        angkatan,
 		FotoPath:        fotoURL,
 		Pilihan1:        pilihan1,
 		Pilihan2:        pilihan2,
@@ -243,6 +245,7 @@ func (ac *ApplicantsController) UpdateStatus(w http.ResponseWriter, r *http.Requ
 			Kelas:     applicant.Kelas,
 			Alat:      req.AlatDiterima, // Use the accepted instrument
 			Status:    "Aktif",
+			Angkatan:  applicant.Angkatan,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}
@@ -286,7 +289,7 @@ func (ac *ApplicantsController) ExportCSV(w http.ResponseWriter, r *http.Request
 	defer writer.Flush()
 
 	// Write header row
-	header := []string{"ID", "Nama Lengkap", "Kelas", "Pilihan 1", "Pilihan 2", "Pilihan 3", "Status", "Alat Diterima", "Kode Pendaftaran", "Foto Path", "Tanggal Daftar"}
+	header := []string{"ID", "Nama Lengkap", "Kelas", "Angkatan", "Pilihan 1", "Pilihan 2", "Pilihan 3", "Status", "Alat Diterima", "Kode Pendaftaran", "Foto Path", "Tanggal Daftar"}
 	if err := writer.Write(header); err != nil {
 		return
 	}
@@ -297,6 +300,7 @@ func (ac *ApplicantsController) ExportCSV(w http.ResponseWriter, r *http.Request
 			strconv.Itoa(int(app.ID)),
 			app.Nama,
 			app.Kelas,
+			app.Angkatan,
 			app.Pilihan1,
 			app.Pilihan2,
 			app.Pilihan3,

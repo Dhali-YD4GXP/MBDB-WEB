@@ -9,6 +9,7 @@ export interface Applicant {
   id: number;
   nama: string;
   kelas: string;
+  angkatan?: string;
   foto_path: string;
   pilihan1: string;
   pilihan2: string;

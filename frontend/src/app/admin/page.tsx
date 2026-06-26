@@ -105,6 +105,97 @@ export default function AdminDashboard() {
     }
   };
 
+  const handlePrintNametag = (app: Applicant) => {
+    const printWindow = window.open('', '_blank', 'width=600,height=500');
+    if (!printWindow) {
+      alert('Gagal membuka jendela cetak. Pastikan pop-up blocker dinonaktifkan.');
+      return;
+    }
+    
+    const doc = printWindow.document;
+    doc.write(`
+      <html>
+        <head>
+          <title>Nametag - ${app.nama}</title>
+          <style>
+            @page {
+              size: 9cm 5.5cm;
+              margin: 0;
+            }
+            body {
+              margin: 0;
+              padding: 0;
+              width: 9cm;
+              height: 5.5cm;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-family: 'Times New Roman', Times, serif;
+              background-color: #ffffff;
+              box-sizing: border-box;
+              -webkit-print-color-adjust: exact;
+            }
+            .card {
+              width: 8.4cm;
+              height: 4.9cm;
+              border: 2px solid #0f172a; /* Dark Navy border */
+              box-sizing: border-box;
+              padding: 0.3cm;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: space-around;
+              text-align: center;
+              background-color: #ffffff;
+            }
+            .nama {
+              font-size: 18pt;
+              font-weight: bold;
+              color: #000000;
+              text-transform: uppercase;
+              line-height: 1.2;
+              word-wrap: break-word;
+              max-width: 100%;
+            }
+            .kelas {
+              font-size: 14pt;
+              font-weight: normal;
+              color: #000000;
+              text-transform: uppercase;
+            }
+            .alat {
+              font-size: 14pt;
+              font-weight: normal;
+              color: #000000;
+              text-transform: uppercase;
+            }
+            .angkatan {
+              font-size: 12pt;
+              font-weight: normal;
+              color: #000000;
+              text-transform: uppercase;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="nama">${app.nama}</div>
+            <div class="kelas">${app.kelas}</div>
+            <div class="alat">${app.alat_diterima || ''}</div>
+            <div class="angkatan">${app.angkatan || ''}</div>
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(function() { window.close(); }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    doc.close();
+  };
+
   const handleExportCSV = async () => {
     setErrorMsg(null);
     try {
@@ -314,8 +405,11 @@ export default function AdminDashboard() {
                     <h3 style={{ fontSize: '1.1rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {app.nama}
                     </h3>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.15rem' }}>
                       Kelas: <strong>{app.kelas}</strong>
+                    </p>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+                      Angkatan: <strong>{app.angkatan || '-'}</strong>
                     </p>
                     <div
                       style={{
@@ -392,23 +486,43 @@ export default function AdminDashboard() {
                       </button>
                     </>
                   ) : (
-                    <>
-                      <button
-                        onClick={() => handleUpdateStatus(app.id, 'Pending')}
-                        className="btn btn-outline"
-                        style={{ flex: 3, padding: '0.4rem', fontSize: '0.825rem' }}
-                      >
-                        Pulihkan ke Pending
-                      </button>
-                      <button
-                        onClick={() => handleDeleteApplicant(app.id)}
-                        className="btn btn-secondary"
-                        style={{ flex: 1.5, padding: '0.4rem', fontSize: '0.825rem', color: 'var(--danger)', borderColor: 'var(--danger-light)' }}
-                        title="Hapus secara permanen"
-                      >
-                        🗑️ Hapus
-                      </button>
-                    </>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                          onClick={() => handleUpdateStatus(app.id, 'Pending')}
+                          className="btn btn-outline"
+                          style={{ flex: 3, padding: '0.4rem', fontSize: '0.825rem' }}
+                        >
+                          Pulihkan ke Pending
+                        </button>
+                        <button
+                          onClick={() => handleDeleteApplicant(app.id)}
+                          className="btn btn-secondary"
+                          style={{ flex: 1.5, padding: '0.4rem', fontSize: '0.825rem', color: 'var(--danger)', borderColor: 'var(--danger-light)' }}
+                          title="Hapus secara permanen"
+                        >
+                          🗑️ Hapus
+                        </button>
+                      </div>
+                      {app.status === 'Accepted' && (
+                        <button
+                          onClick={() => handlePrintNametag(app)}
+                          className="btn btn-primary"
+                          style={{
+                            padding: '0.45rem',
+                            fontSize: '0.825rem',
+                            backgroundColor: 'var(--primary)',
+                            display: 'flex',
+                            gap: '0.35rem',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '100%'
+                          }}
+                        >
+                          📇 Cetak Nametag
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

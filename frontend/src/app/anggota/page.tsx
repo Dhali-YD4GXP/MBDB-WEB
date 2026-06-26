@@ -10,6 +10,7 @@ interface Member {
   kelas: string;
   alat: string;
   status: 'Aktif' | 'Alumni';
+  angkatan?: string;
   created_at: string;
   updated_at: string;
 }
@@ -33,6 +34,7 @@ export default function MembersPage() {
     kelas: '',
     alat: '',
     status: 'Aktif' as 'Aktif' | 'Alumni',
+    angkatan: '',
   });
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -95,6 +97,7 @@ export default function MembersPage() {
       kelas: '',
       alat: '',
       status: 'Aktif',
+      angkatan: '',
     });
     setFormError(null);
     setIsModalOpen(true);
@@ -107,6 +110,7 @@ export default function MembersPage() {
       kelas: member.kelas,
       alat: member.alat,
       status: member.status,
+      angkatan: member.angkatan || '',
     });
     setFormError(null);
     setIsModalOpen(true);
@@ -117,7 +121,7 @@ export default function MembersPage() {
     setFormError(null);
     setIsSubmitting(true);
 
-    if (!formData.nama.trim() || !formData.kelas.trim() || !formData.alat.trim()) {
+    if (!formData.nama.trim() || !formData.kelas.trim() || !formData.alat.trim() || !formData.angkatan.trim()) {
       setFormError('Semua kolom wajib diisi');
       setIsSubmitting(false);
       return;
@@ -160,6 +164,97 @@ export default function MembersPage() {
     } catch (err: any) {
       alert(err.message || 'Gagal menghapus anggota');
     }
+  };
+
+  const handlePrintNametag = (member: Member) => {
+    const printWindow = window.open('', '_blank', 'width=600,height=500');
+    if (!printWindow) {
+      alert('Gagal membuka jendela cetak. Pastikan pop-up blocker dinonaktifkan.');
+      return;
+    }
+    
+    const doc = printWindow.document;
+    doc.write(`
+      <html>
+        <head>
+          <title>Nametag - ${member.nama}</title>
+          <style>
+            @page {
+              size: 9cm 5.5cm;
+              margin: 0;
+            }
+            body {
+              margin: 0;
+              padding: 0;
+              width: 9cm;
+              height: 5.5cm;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-family: 'Times New Roman', Times, serif;
+              background-color: #ffffff;
+              box-sizing: border-box;
+              -webkit-print-color-adjust: exact;
+            }
+            .card {
+              width: 8.4cm;
+              height: 4.9cm;
+              border: 2px solid #0f172a; /* Dark Navy border */
+              box-sizing: border-box;
+              padding: 0.3cm;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: space-around;
+              text-align: center;
+              background-color: #ffffff;
+            }
+            .nama {
+              font-size: 18pt;
+              font-weight: bold;
+              color: #000000;
+              text-transform: uppercase;
+              line-height: 1.2;
+              word-wrap: break-word;
+              max-width: 100%;
+            }
+            .kelas {
+              font-size: 14pt;
+              font-weight: normal;
+              color: #000000;
+              text-transform: uppercase;
+            }
+            .alat {
+              font-size: 14pt;
+              font-weight: normal;
+              color: #000000;
+              text-transform: uppercase;
+            }
+            .angkatan {
+              font-size: 12pt;
+              font-weight: normal;
+              color: #000000;
+              text-transform: uppercase;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="nama">${member.nama}</div>
+            <div class="kelas">${member.kelas}</div>
+            <div class="alat">${member.alat || ''}</div>
+            <div class="angkatan">${member.angkatan || ''}</div>
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(function() { window.close(); }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    doc.close();
   };
 
   const activeCount = members.filter((m) => m.status === 'Aktif').length;
@@ -359,6 +454,7 @@ export default function MembersPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                   <div>🏫 Kelas: <strong>{member.kelas}</strong></div>
                   <div>🎷 Alat: <strong>{member.alat}</strong></div>
+                  <div>🎓 Angkatan: <strong>{member.angkatan || '-'}</strong></div>
                 </div>
               </div>
 
@@ -381,6 +477,16 @@ export default function MembersPage() {
                   >
                     ✏️ Edit
                   </button>
+                  {member.status === 'Aktif' && (
+                    <button
+                      onClick={() => handlePrintNametag(member)}
+                      className="btn btn-outline"
+                      style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem', borderColor: 'var(--accent)', color: 'var(--accent)' }}
+                      title="Cetak nametag anggota"
+                    >
+                      📇 Nametag
+                    </button>
+                  )}
                   {member.status === 'Aktif' ? (
                     <button
                       onClick={() => handleStatusChange(member, 'Alumni')}
@@ -501,6 +607,25 @@ export default function MembersPage() {
                   placeholder="Misal: Snare Drum, Trumpet, Mellophone"
                   value={formData.alat}
                   onChange={(e) => setFormData({ ...formData, alat: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--bg-primary)',
+                    color: 'var(--text-primary)',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Angkatan (Tahun Masuk)</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Misal: 2026 atau Angkatan 30"
+                  value={formData.angkatan}
+                  onChange={(e) => setFormData({ ...formData, angkatan: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '0.75rem',
