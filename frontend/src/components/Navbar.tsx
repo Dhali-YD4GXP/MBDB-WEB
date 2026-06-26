@@ -111,6 +111,18 @@ export default function Navbar() {
           >
             Pendaftaran Baru
           </Link>
+          {!token && (
+            <Link
+              href="/aktivasi"
+              style={{
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                color: pathname === '/aktivasi' ? 'var(--accent)' : 'var(--text-secondary)',
+              }}
+            >
+              Aktivasi Akun
+            </Link>
+          )}
 
           {token && role === 'Member' && (
             <Link
@@ -385,6 +397,18 @@ export default function Navbar() {
           >
             Pendaftaran Baru
           </Link>
+          {!token && (
+            <Link
+              href="/aktivasi"
+              onClick={() => setIsMenuOpen(false)}
+              style={{
+                fontWeight: 600,
+                color: pathname === '/aktivasi' ? 'var(--accent)' : 'var(--text-primary)',
+              }}
+            >
+              Aktivasi Akun
+            </Link>
+          )}
 
           {token && role === 'Member' && (
             <Link

@@ -194,9 +194,12 @@ export default function MainDashboard() {
             Selamat datang di Portal Resmi Marching Band & Drumband SMA Negeri 1 Kayuagung. 
             Ikuti agenda latihan, jadwal lomba, penampilan kami, atau bergabunglah menjadi anggota baru.
           </p>
-          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
             <Link href="/pendaftaran" className="btn btn-accent">
               ✍️ Daftar Anggota Baru
+            </Link>
+            <Link href="/aktivasi" className="btn btn-outline" style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }}>
+              🔑 Aktivasi Akun Anggota
             </Link>
             <a href="#agendas-section" className="btn btn-secondary">
               📅 Lihat Agenda Kegiatan
