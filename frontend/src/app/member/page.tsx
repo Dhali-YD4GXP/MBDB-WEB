@@ -25,6 +25,10 @@ export default function MemberDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Held Instruments State
+  const [myInstruments, setMyInstruments] = useState<any[]>([]);
+  const [isLoadingInstruments, setIsLoadingInstruments] = useState(false);
+
   // Scanner and Scan Results states
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isValidatingQR, setIsValidatingQR] = useState(false);
@@ -49,6 +53,7 @@ export default function MemberDashboard() {
     }
 
     fetchProfile();
+    fetchMyInstruments();
   }, [router]);
 
   const fetchProfile = async () => {
@@ -62,6 +67,37 @@ export default function MemberDashboard() {
       setError(err.message || 'Gagal memuat profil anggota');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchMyInstruments = async () => {
+    setIsLoadingInstruments(true);
+    try {
+      const data = await api.get<any[]>('/api/instruments/my');
+      setMyInstruments(data);
+    } catch (err) {
+      console.error('Gagal mengambil data alat yang dipegang:', err);
+    } finally {
+      setIsLoadingInstruments(false);
+    }
+  };
+
+  const handleReleaseInstrument = async (id: string) => {
+    if (!window.confirm('Apakah Anda yakin ingin mengembalikan alat musik ini ke gudang?')) return;
+    try {
+      await api.post(`/api/instruments/${id}/release`, {});
+      setScanResult({
+        type: 'success',
+        title: 'Alat Dikembalikan',
+        message: 'Alat musik berhasil dikembalikan ke inventaris gudang.',
+      });
+      fetchMyInstruments();
+    } catch (err: any) {
+      setScanResult({
+        type: 'error',
+        title: 'Gagal Mengembalikan',
+        message: err.message || 'Terjadi kesalahan saat mengembalikan alat musik.',
+      });
     }
   };
 
@@ -189,6 +225,7 @@ export default function MemberDashboard() {
         title: 'Klaim Alat Berhasil!',
         message: claimRes.message || `Anda sekarang terdaftar sebagai pemegang terakhir alat ini.`,
       });
+      fetchMyInstruments();
     } catch (err: any) {
       console.error('Scan handling failed:', err);
       setScanResult({
@@ -416,6 +453,102 @@ export default function MemberDashboard() {
             📥 Unduh Name Tag (PDF)
           </button>
         </div>
+      </div>
+
+      {/* List of Held Instruments */}
+      <div
+        className="glass animate-slide-up"
+        style={{
+          padding: '2rem',
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: 'var(--shadow-lg)',
+          marginBottom: '2rem',
+          animationDelay: '0.1s',
+        }}
+      >
+        <h2
+          style={{
+            fontSize: '1.25rem',
+            fontWeight: 800,
+            marginBottom: '1rem',
+            fontFamily: 'var(--font-display)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+          }}
+        >
+          🎺 Alat yang Sedang Anda Pegang
+        </h2>
+
+        {isLoadingInstruments ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem 0' }}>
+            <div className="spinner"></div>
+          </div>
+        ) : myInstruments.length === 0 ? (
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: 0 }}>
+            Anda sedang tidak memegang alat musik apa pun. Silakan scan QR code pada alat musik untuk mengklaim.
+          </p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            {myInstruments.map((inst) => (
+              <div
+                key={inst.id}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '1rem',
+                  backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--border-color)',
+                }}
+              >
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700 }}>{inst.jenis_alat}</h4>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>
+                    ID: {inst.id}
+                  </span>
+                  <div style={{ marginTop: '0.25rem' }}>
+                    <span
+                      style={{
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        padding: '0.1rem 0.5rem',
+                        borderRadius: 'var(--radius-full)',
+                        backgroundColor:
+                          inst.kondisi === 'Bagus'
+                            ? 'var(--success-light)'
+                            : inst.kondisi === 'Butuh Perbaikan'
+                            ? 'var(--warning-light)'
+                            : 'var(--danger-light)',
+                        color:
+                          inst.kondisi === 'Bagus'
+                            ? 'var(--success)'
+                            : inst.kondisi === 'Butuh Perbaikan'
+                            ? 'var(--warning)'
+                            : 'var(--danger)',
+                      }}
+                    >
+                      {inst.kondisi}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleReleaseInstrument(inst.id)}
+                  className="btn btn-outline"
+                  style={{
+                    padding: '0.4rem 0.8rem',
+                    fontSize: '0.8rem',
+                    borderColor: 'var(--danger)',
+                    color: 'var(--danger)',
+                  }}
+                >
+                  ↩️ Kembalikan
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* QR Code Scan Result Modal */}

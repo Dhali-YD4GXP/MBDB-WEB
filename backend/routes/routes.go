@@ -104,6 +104,8 @@ func SetupRoutes(db *gorm.DB) *http.ServeMux {
 	
 	memberAuth := middleware.AuthMiddleware(db, "Member", "Official", "Admin")
 	mux.Handle("POST /api/instruments/{id}/claim", memberAuth(http.HandlerFunc(instCtrl.Claim)))
+	mux.Handle("GET /api/instruments/my", memberAuth(http.HandlerFunc(instCtrl.MyInstruments)))
+	mux.Handle("POST /api/instruments/{id}/release", memberAuth(http.HandlerFunc(instCtrl.Release)))
 	
 	anyAuth := middleware.AuthMiddleware(db, "Member", "Official", "Admin", "Bendahara")
 	mux.Handle("GET /api/auth/me", anyAuth(http.HandlerFunc(authCtrl.Me)))

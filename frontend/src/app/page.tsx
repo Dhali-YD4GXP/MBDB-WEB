@@ -13,6 +13,8 @@ export default function MainDashboard() {
   const [isLoadingOrg, setIsLoadingOrg] = useState(true);
   
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
   // Mobile toggle for Org Structure dropdown
@@ -35,6 +37,8 @@ export default function MainDashboard() {
     const role = localStorage.getItem('mbdb_role');
     const token = localStorage.getItem('mbdb_token');
     setIsAdmin(!!token && role === 'Admin');
+    setIsLoggedIn(!!token);
+    setUserRole(role);
 
     fetchAgendas();
     fetchOrgStructure();
@@ -195,12 +199,23 @@ export default function MainDashboard() {
             Ikuti agenda latihan, jadwal lomba, penampilan kami, atau bergabunglah menjadi anggota baru.
           </p>
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <Link href="/pendaftaran" className="btn btn-accent">
-              ✍️ Daftar Anggota Baru
-            </Link>
-            <Link href="/aktivasi" className="btn btn-outline" style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }}>
-              🔑 Aktivasi Akun Anggota
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                href={userRole === 'Admin' ? '/admin' : userRole === 'Member' ? '/member' : '/loading'}
+                className="btn btn-accent"
+              >
+                💻 Masuk ke Dashboard Saya
+              </Link>
+            ) : (
+              <>
+                <Link href="/pendaftaran" className="btn btn-accent">
+                  ✍️ Daftar Anggota Baru
+                </Link>
+                <Link href="/aktivasi" className="btn btn-outline" style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }}>
+                  🔑 Aktivasi Akun Anggota
+                </Link>
+              </>
+            )}
             <a href="#agendas-section" className="btn btn-secondary">
               📅 Lihat Agenda Kegiatan
             </a>
