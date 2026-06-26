@@ -235,6 +235,8 @@ export default function MembersPage() {
 
   const activeCount = members.filter((m) => m.status === 'Aktif').length;
   const alumniCount = members.filter((m) => m.status === 'Alumni').length;
+  const activatedCount = members.filter((m) => m.is_activated).length;
+  const notActivatedCount = members.filter((m) => !m.is_activated).length;
 
   if (isLoading && members.length === 0) {
     return (
@@ -320,6 +322,23 @@ export default function MembersPage() {
           <div>
             <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Alumni (Lulus)</div>
             <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--primary)' }}>{alumniCount} Orang</div>
+          </div>
+        </div>
+
+        <div className="glass" style={{ padding: '1.5rem', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ fontSize: '2.5rem', background: 'var(--warning-light)', padding: '0.5rem', borderRadius: '50%' }}>🔑</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>Aktivasi Akun</div>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block' }}>Sudah</span>
+                <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--success)' }}>{activatedCount} <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>Orang</span></span>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block' }}>Belum</span>
+                <span style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--danger)' }}>{notActivatedCount} <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>Orang</span></span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
