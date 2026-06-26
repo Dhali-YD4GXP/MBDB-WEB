@@ -257,3 +257,67 @@ func (mc *MembersController) Delete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Anggota berhasil dihapus"})
 }
+
+// Lookup looks up a member's NomorAnggota and activation code (Public)
+func (mc *MembersController) Lookup(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var req struct {
+		Nama     string `json:"nama"`
+		Angkatan string `json:"angkatan"`
+		Alat     string `json:"alat"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Payload request tidak valid"})
+		return
+	}
+
+	req.Nama = strings.TrimSpace(req.Nama)
+	req.Angkatan = strings.TrimSpace(req.Angkatan)
+	req.Alat = strings.TrimSpace(req.Alat)
+
+	if req.Nama == "" || req.Angkatan == "" || req.Alat == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Nama, Angkatan, dan Alat musik wajib diisi"})
+		return
+	}
+
+	var member models.Member
+	if err := mc.DB.Where("LOWER(nama) = LOWER(?) AND angkatan = ? AND LOWER(alat) = LOWER(?)", req.Nama, req.Angkatan, req.Alat).First(&member).Error; err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Data anggota tidak ditemukan. Periksa kembali keselarasan nama, angkatan, dan alat musik Anda."})
+		return
+	}
+
+	var user models.User
+	if err := mc.DB.Where("username = ?", member.NomorAnggota).First(&user).Error; err != nil {
+		// If user doesn't exist, create it as inactive
+		user = models.User{
+			Username:  member.NomorAnggota,
+			Password:  "",
+			Role:      "Member",
+			CreatedAt: time.Now(),
+		}
+		_ = mc.DB.Create(&user)
+	}
+
+	if user.Password != "" {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status":        "active",
+			"nomor_anggota": member.NomorAnggota,
+			"message":       "Akun Anda sudah aktif. Silakan gunakan Nomor Anggota Anda untuk login.",
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":           "inactive",
+		"nomor_anggota":    member.NomorAnggota,
+		"kode_pendaftaran": member.KodePendaftaran,
+		"message":          "Akun Anda belum diaktivasi. Silakan catat Nomor Anggota dan Kode Aktivasi di bawah untuk melakukan aktivasi.",
+	})
+}
