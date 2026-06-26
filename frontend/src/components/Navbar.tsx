@@ -52,7 +52,7 @@ export default function Navbar() {
     >
       <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         {/* Brand/Logo */}
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0, marginRight: '2.5rem' }}>
           <img
             src="/logo.png"
             alt="Logo MBDB"
@@ -89,7 +89,7 @@ export default function Navbar() {
               color: pathname === '/' ? 'var(--accent)' : 'var(--text-secondary)',
             }}
           >
-            Dashboard
+            Beranda
           </Link>
           <Link
             href="/organisasi"
@@ -109,7 +109,7 @@ export default function Navbar() {
               color: pathname === '/pendaftaran' ? 'var(--accent)' : 'var(--text-secondary)',
             }}
           >
-            Pendaftaran Baru
+            Pendaftaran
           </Link>
           <Link
             href="/alumni"
@@ -119,7 +119,7 @@ export default function Navbar() {
               color: pathname === '/alumni' ? 'var(--accent)' : 'var(--text-secondary)',
             }}
           >
-            Daftar Alumni
+            Alumni
           </Link>
           {!token && (
             <Link
@@ -143,7 +143,7 @@ export default function Navbar() {
                 color: pathname === '/member' ? 'var(--accent)' : 'var(--text-secondary)',
               }}
             >
-              Dashboard Anggota
+              Dashboard
             </Link>
           )}
 
@@ -156,7 +156,7 @@ export default function Navbar() {
                 color: pathname === '/lost-reports' ? 'var(--accent)' : 'var(--text-secondary)',
               }}
             >
-              Lapor Alat Hilang
+              Lapor Hilang
             </Link>
           )}
 
