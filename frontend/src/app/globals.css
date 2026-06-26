@@ -327,3 +327,16 @@ button {
   animation: scanLine 2s linear infinite;
   z-index: 10;
 }
+
+/* Footer Social Media Links */
+.footer-social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+}
+
+.footer-social-link:hover {
+  color: var(--accent) !important;
+}
