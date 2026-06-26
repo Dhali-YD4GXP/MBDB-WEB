@@ -54,6 +54,12 @@
       "namedRegex": "^/admin/register\\-official(?:/)?$"
     },
     {
+      "page": "/aktivasi",
+      "regex": "^/aktivasi(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/aktivasi(?:/)?$"
+    },
+    {
       "page": "/anggota",
       "regex": "^/anggota(?:/)?$",
       "routeKeys": {},
@@ -94,6 +100,12 @@
       "regex": "^/login(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/login(?:/)?$"
+    },
+    {
+      "page": "/member",
+      "regex": "^/member(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/member(?:/)?$"
     },
     {
       "page": "/organisasi",
