@@ -158,29 +158,29 @@ export default function RegisterMember() {
     
     // 1. Nama
     const namaText = statusResult.nama.toUpperCase();
-    let namaFontSize = 42;
+    let namaFontSize = 83; // 20pt at 300 DPI
     ctx.font = `bold ${namaFontSize}px "Times New Roman", Times, serif`;
     // Scale font size down if name is too long
-    while (ctx.measureText(namaText).width > 880 && namaFontSize > 20) {
-      namaFontSize -= 2;
+    while (ctx.measureText(namaText).width > 880 && namaFontSize > 40) {
+      namaFontSize -= 4;
       ctx.font = `bold ${namaFontSize}px "Times New Roman", Times, serif`;
     }
     ctx.fillText(namaText, 531.5, 180);
     
     // 2. Kelas
     const kelasText = statusResult.kelas.toUpperCase();
-    ctx.font = `32px "Times New Roman", Times, serif`;
+    ctx.font = `67px "Times New Roman", Times, serif`; // 16pt at 300 DPI
     ctx.fillText(kelasText, 531.5, 300);
     
     // 3. Alat
     const alatText = (statusResult.alat_diterima || '').toUpperCase();
-    ctx.font = `32px "Times New Roman", Times, serif`;
+    ctx.font = `67px "Times New Roman", Times, serif`; // 16pt at 300 DPI
     ctx.fillText(alatText, 531.5, 420);
     
     // 4. Angkatan
     const angkatanText = (statusResult.angkatan || '').toUpperCase();
-    ctx.font = `28px "Times New Roman", Times, serif`;
-    ctx.fillText(angkatanText, 531.5, 520);
+    ctx.font = `67px "Times New Roman", Times, serif`; // 16pt at 300 DPI
+    ctx.fillText(angkatanText, 531.5, 530);
     
     // Convert canvas to image and add to PDF
     const imgData = canvas.toDataURL('image/png');
