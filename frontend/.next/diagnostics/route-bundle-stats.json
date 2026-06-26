@@ -48,11 +48,11 @@
   },
   {
     "route": "/anggota",
-    "firstLoadUncompressedJsBytes": 975464,
+    "firstLoadUncompressedJsBytes": 975484,
     "firstLoadChunkPaths": [
       ".next/static/chunks/18mt2g7x_q-yi.js",
       ".next/static/chunks/14mrh2-p_w84d.js",
-      ".next/static/chunks/3cdzb6g26dx69.js",
+      ".next/static/chunks/0v7rndc1auma2.js",
       ".next/static/chunks/1p404xzf0-bzb.js",
       ".next/static/chunks/1gdoryk6w2r8v.js",
       ".next/static/chunks/27jktro2p5rq9.js",

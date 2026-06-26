@@ -434,7 +434,7 @@ export default function MembersPage() {
                   {member.kode_pendaftaran && (member.status === 'Aktif' || member.status === 'Alumni') && (
                     <div style={{ color: 'var(--accent)', fontWeight: 600 }}>🔑 Kode Aktivasi: {member.kode_pendaftaran}</div>
                   )}
-                  {member.total_latihan !== undefined && (
+                  {member.total_latihan !== undefined && member.status === 'Aktif' && (
                     <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px dashed var(--border-color)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', fontSize: '0.85rem' }}>
                         <span style={{ color: 'var(--text-secondary)' }}>📅 Kehadiran Latihan:</span>
