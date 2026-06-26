@@ -101,12 +101,14 @@ type FinanceRecord struct {
 
 // PracticeSession represents a practice session started by the admin
 type PracticeSession struct {
-	ID        uint       `gorm:"primaryKey" json:"id"`
-	Title     string     `gorm:"not null;type:varchar(150)" json:"title"`
-	Token     string     `gorm:"unique;not null;type:varchar(100)" json:"token"` // Unique QR token
-	IsActive  bool       `gorm:"not null;default:true" json:"is_active"`
-	CreatedAt time.Time  `json:"created_at"`
-	ClosedAt  *time.Time `json:"closed_at,omitempty"`
+	ID           uint       `gorm:"primaryKey" json:"id"`
+	Title        string     `gorm:"not null;type:varchar(150)" json:"title"`
+	Token        string     `gorm:"unique;not null;type:varchar(100)" json:"token"` // Unique QR token
+	IsActive     bool       `gorm:"not null;default:true" json:"is_active"`
+	TanggalMulai string     `gorm:"type:varchar(20)" json:"tanggal_mulai"`
+	JamMulai     string     `gorm:"type:varchar(20)" json:"jam_mulai"`
+	CreatedAt    time.Time  `json:"created_at"`
+	ClosedAt     *time.Time `json:"closed_at,omitempty"`
 }
 
 // AttendanceRecord represents a participant's attendance log in a practice session
@@ -116,7 +118,18 @@ type AttendanceRecord struct {
 	PracticeSession   PracticeSession `gorm:"foreignKey:PracticeSessionID;constraint:OnDelete:CASCADE" json:"-"`
 	Nama              string          `gorm:"not null;type:varchar(150)" json:"nama"`
 	Alat              string          `gorm:"not null;type:varchar(100)" json:"alat"`
+	Status            string          `gorm:"type:varchar(20);default:'Hadir'" json:"status"` // "Hadir" or "Terlambat"
+	AlasanTerlambat   string          `gorm:"type:text" json:"alasan_terlambat"`
 	Timestamp         time.Time       `gorm:"not null" json:"timestamp"`
+}
+
+// LostReport represents reports of lost instruments
+type LostReport struct {
+	ID             uint      `gorm:"primaryKey" json:"id"`
+	NamaAlat       string    `gorm:"not null;type:varchar(150)" json:"nama_alat"`
+	LokasiHilang   string    `gorm:"not null;type:varchar(200)" json:"lokasi_hilang"`
+	PlayerTerakhir string    `gorm:"not null;type:varchar(150)" json:"player_terakhir"`
+	CreatedAt      time.Time `json:"created_at"`
 }
 
 // Member represents the active and alumni members of the marching band

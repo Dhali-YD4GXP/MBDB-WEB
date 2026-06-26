@@ -147,6 +147,19 @@ export default function Navbar() {
             </Link>
           )}
 
+          {token && (
+            <Link
+              href="/lost-reports"
+              style={{
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                color: pathname === '/lost-reports' ? 'var(--accent)' : 'var(--text-secondary)',
+              }}
+            >
+              Lapor Alat Hilang
+            </Link>
+          )}
+
           {token && (role === 'Admin' || role === 'Official') && (
             <>
               <Link
@@ -300,7 +313,7 @@ export default function Navbar() {
                           }}
                           className="dropdown-item"
                         >
-                          ⏱️ Sesi Latihan
+                          📋 Presensi
                         </Link>
 
                         <Link
@@ -443,6 +456,19 @@ export default function Navbar() {
             </Link>
           )}
 
+          {token && (
+            <Link
+              href="/lost-reports"
+              onClick={() => setIsMenuOpen(false)}
+              style={{
+                fontWeight: 600,
+                color: pathname === '/lost-reports' ? 'var(--accent)' : 'var(--text-primary)',
+              }}
+            >
+              Lapor Alat Hilang
+            </Link>
+          )}
+
           {token && (role === 'Admin' || role === 'Official') && (
             <>
               <Link
@@ -521,7 +547,7 @@ export default function Navbar() {
                   color: pathname === '/practice-sessions' ? 'var(--accent)' : 'var(--text-primary)',
                 }}
               >
-                Sesi Latihan
+                Presensi
               </Link>
               <Link
                 href="/competition-sessions"

@@ -63,7 +63,9 @@ func (psc *PracticeSessionsController) Create(w http.ResponseWriter, r *http.Req
 	}
 
 	var req struct {
-		Title string `json:"title"`
+		Title        string `json:"title"`
+		TanggalMulai string `json:"tanggal_mulai"`
+		JamMulai     string `json:"jam_mulai"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -77,6 +79,16 @@ func (psc *PracticeSessionsController) Create(w http.ResponseWriter, r *http.Req
 		req.Title = fmt.Sprintf("Latihan Rutin - %s", time.Now().Format("02 Jan 2006"))
 	}
 
+	req.TanggalMulai = strings.TrimSpace(req.TanggalMulai)
+	if req.TanggalMulai == "" {
+		req.TanggalMulai = time.Now().Format("2006-01-02")
+	}
+
+	req.JamMulai = strings.TrimSpace(req.JamMulai)
+	if req.JamMulai == "" {
+		req.JamMulai = time.Now().Format("15:04")
+	}
+
 	// Deactivate any active sessions first, so there is only one active attendance QR at a time
 	psc.DB.Model(&models.PracticeSession{}).Where("is_active = ?", true).Updates(map[string]interface{}{
 		"is_active": false,
@@ -84,10 +96,12 @@ func (psc *PracticeSessionsController) Create(w http.ResponseWriter, r *http.Req
 	})
 
 	newSession := models.PracticeSession{
-		Title:     req.Title,
-		Token:     generateToken(),
-		IsActive:  true,
-		CreatedAt: time.Now(),
+		Title:        req.Title,
+		Token:        generateToken(),
+		IsActive:     true,
+		TanggalMulai: req.TanggalMulai,
+		JamMulai:     req.JamMulai,
+		CreatedAt:    time.Now(),
 	}
 
 	if err := psc.DB.Create(&newSession).Error; err != nil {
@@ -214,8 +228,9 @@ func (psc *PracticeSessionsController) Attend(w http.ResponseWriter, r *http.Req
 	}
 
 	var req struct {
-		Nama string `json:"nama"`
-		Alat string `json:"alat"`
+		Nama            string `json:"nama"`
+		Alat            string `json:"alat"`
+		AlasanTerlambat string `json:"alasan_terlambat"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -226,6 +241,7 @@ func (psc *PracticeSessionsController) Attend(w http.ResponseWriter, r *http.Req
 
 	req.Nama = strings.TrimSpace(req.Nama)
 	req.Alat = strings.TrimSpace(req.Alat)
+	req.AlasanTerlambat = strings.TrimSpace(req.AlasanTerlambat)
 
 	if req.Nama == "" || req.Alat == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -233,10 +249,26 @@ func (psc *PracticeSessionsController) Attend(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	loc, err := time.LoadLocation("Asia/Jakarta")
+	if err != nil {
+		loc = time.Local
+	}
+
+	status := "Hadir"
+	if session.TanggalMulai != "" && session.JamMulai != "" {
+		scheduledStr := fmt.Sprintf("%s %s", session.TanggalMulai, session.JamMulai)
+		scheduledTime, err := time.ParseInLocation("2006-01-02 15:04", scheduledStr, loc)
+		if err == nil && time.Now().After(scheduledTime) {
+			status = "Terlambat"
+		}
+	}
+
 	newRecord := models.AttendanceRecord{
 		PracticeSessionID: session.ID,
 		Nama:              req.Nama,
 		Alat:              req.Alat,
+		Status:            status,
+		AlasanTerlambat:   req.AlasanTerlambat,
 		Timestamp:         time.Now(),
 	}
 
@@ -293,7 +325,7 @@ func (psc *PracticeSessionsController) Export(w http.ResponseWriter, r *http.Req
 	writer := csv.NewWriter(w)
 	defer writer.Flush()
 
-	writer.Write([]string{"No", "Nama Peserta", "Pilihan Alat/Alat", "Waktu Presensi"})
+	writer.Write([]string{"No", "Nama Peserta", "Pilihan Alat/Alat", "Waktu Presensi", "Status", "Alasan Keterlambatan"})
 
 	for i, att := range attendances {
 		writer.Write([]string{
@@ -301,6 +333,8 @@ func (psc *PracticeSessionsController) Export(w http.ResponseWriter, r *http.Req
 			att.Nama,
 			att.Alat,
 			att.Timestamp.Format("2006-01-02 15:04:05"),
+			att.Status,
+			att.AlasanTerlambat,
 		})
 	}
 }

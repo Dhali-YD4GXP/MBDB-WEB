@@ -114,6 +114,7 @@ func InitDB() *gorm.DB {
 		&models.Member{},
 		&models.CompetitionSession{},
 		&models.CompetitionRoster{},
+		&models.LostReport{},
 	)
 	if err != nil {
 		log.Fatalf("Migration failed: %v", err)

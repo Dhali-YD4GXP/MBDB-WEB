@@ -25,6 +25,7 @@ func SetupRoutes(db *gorm.DB) *http.ServeMux {
 	membersCtrl := &controllers.MembersController{DB: db}
 	practiceSessCtrl := &controllers.PracticeSessionsController{DB: db}
 	competCtrl := &controllers.CompetitionSessionsController{DB: db}
+	lostCtrl := &controllers.LostReportsController{DB: db}
 
 	// 1. PUBLIC ROUTES
 	mux.HandleFunc("POST /api/auth/login", authCtrl.Login)
@@ -108,6 +109,8 @@ func SetupRoutes(db *gorm.DB) *http.ServeMux {
 	mux.Handle("POST /api/instruments/{id}/claim", memberAuth(http.HandlerFunc(instCtrl.Claim)))
 	mux.Handle("GET /api/instruments/my", memberAuth(http.HandlerFunc(instCtrl.MyInstruments)))
 	mux.Handle("POST /api/instruments/{id}/release", memberAuth(http.HandlerFunc(instCtrl.Release)))
+	mux.Handle("POST /api/lost-reports", memberAuth(http.HandlerFunc(lostCtrl.Create)))
+	mux.Handle("GET /api/lost-reports", memberAuth(http.HandlerFunc(lostCtrl.List)))
 	
 	anyAuth := middleware.AuthMiddleware(db, "Member", "Official", "Admin", "Bendahara")
 	mux.Handle("GET /api/auth/me", anyAuth(http.HandlerFunc(authCtrl.Me)))

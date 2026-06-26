@@ -42,6 +42,7 @@ export default function MemberDashboard() {
   const [confirmPractice, setConfirmPractice] = useState<{ session: any; token: string } | null>(null);
   const [confirmCompetition, setConfirmCompetition] = useState<{ session: any; rosterItem: any; token: string } | null>(null);
   const [isSubmittingAttendance, setIsSubmittingAttendance] = useState(false);
+  const [alasanTerlambat, setAlasanTerlambat] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('mbdb_token');
@@ -190,6 +191,7 @@ export default function MemberDashboard() {
       const practiceRes = await fetch(`${baseUrl}/api/public/practice-sessions/${token}`);
       if (practiceRes.ok) {
         const session = await practiceRes.json();
+        setAlasanTerlambat('');
         setConfirmPractice({ session, token });
         setIsValidatingQR(false);
         return;
@@ -218,13 +220,23 @@ export default function MemberDashboard() {
         return;
       }
 
-      // 3. Neither session token matched. Assume this is an Instrument ID and attempt to claim it.
-      const claimRes = await api.post<any>(`/api/instruments/${token}/claim`, {});
-      setScanResult({
-        type: 'success',
-        title: 'Klaim Alat Berhasil!',
-        message: claimRes.message || `Anda sekarang terdaftar sebagai pemegang terakhir alat ini.`,
-      });
+      // 3. Neither session token matched. Assume this is an Instrument ID.
+      const isAlreadyHeld = myInstruments.some((inst) => inst.id === token);
+      if (isAlreadyHeld) {
+        const releaseRes = await api.post<any>(`/api/instruments/${token}/release`, {});
+        setScanResult({
+          type: 'success',
+          title: 'Alat Dikembalikan!',
+          message: releaseRes.message || 'Alat musik berhasil dikembalikan ke inventaris gudang.',
+        });
+      } else {
+        const claimRes = await api.post<any>(`/api/instruments/${token}/claim`, {});
+        setScanResult({
+          type: 'success',
+          title: 'Klaim Alat Berhasil!',
+          message: claimRes.message || `Anda sekarang terdaftar sebagai pemegang terakhir alat ini.`,
+        });
+      }
       fetchMyInstruments();
     } catch (err: any) {
       console.error('Scan handling failed:', err);
@@ -238,8 +250,23 @@ export default function MemberDashboard() {
     }
   };
 
+  const isLate = (sess: any) => {
+    if (!sess || !sess.tanggal_mulai || !sess.jam_mulai) return false;
+    const [year, month, day] = sess.tanggal_mulai.split('-').map(Number);
+    const [hour, minute] = sess.jam_mulai.split(':').map(Number);
+    const scheduledDate = new Date(year, month - 1, day, hour, minute, 0);
+    const now = new Date();
+    return now > scheduledDate;
+  };
+
   const handleConfirmPracticeAttendance = async () => {
     if (!confirmPractice || !profile?.member) return;
+    
+    if (isLate(confirmPractice.session) && !alasanTerlambat.trim()) {
+      alert('Anda terlambat! Harap masukkan alasan keterlambatan.');
+      return;
+    }
+
     setIsSubmittingAttendance(true);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
@@ -249,6 +276,7 @@ export default function MemberDashboard() {
         body: JSON.stringify({
           nama: profile.member.nama,
           alat: profile.member.alat,
+          alasan_terlambat: alasanTerlambat,
         }),
       });
 
@@ -533,20 +561,14 @@ export default function MemberDashboard() {
                     </span>
                   </div>
                 </div>
-                <button
-                  onClick={() => handleReleaseInstrument(inst.id)}
-                  className="btn btn-outline"
-                  style={{
-                    padding: '0.4rem 0.8rem',
-                    fontSize: '0.8rem',
-                    borderColor: 'var(--danger)',
-                    color: 'var(--danger)',
-                  }}
-                >
-                  ↩️ Kembalikan
-                </button>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  🔒 Pindai QR Ulang untuk Mengembalikan
+                </div>
               </div>
             ))}
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic', marginTop: '0.5rem', textAlign: 'center' }}>
+              Untuk mengembalikan alat ke gudang, silakan pindai ulang QR Code pada fisik alat musik.
+            </p>
           </div>
         )}
       </div>
@@ -658,6 +680,31 @@ export default function MemberDashboard() {
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '1.5rem' }}>
               Apakah Anda ingin mengirim data presensi untuk sesi latihan <strong>{confirmPractice.session.title}</strong>?
             </p>
+
+            {isLate(confirmPractice.session) && (
+              <div style={{ marginBottom: '1.5rem', textAlign: 'left' }}>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--danger)' }}>
+                  ⚠️ Anda Terlambat. Silakan isi alasan keterlambatan:
+                </label>
+                <textarea
+                  required
+                  placeholder="Tulis alasan keterlambatan Anda di sini..."
+                  value={alasanTerlambat}
+                  onChange={(e) => setAlasanTerlambat(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-color)',
+                    background: 'var(--bg-primary)',
+                    color: 'var(--text-primary)',
+                    minHeight: '80px',
+                    fontSize: '0.9rem',
+                    resize: 'vertical',
+                  }}
+                />
+              </div>
+            )}
             
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button

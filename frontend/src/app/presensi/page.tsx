@@ -27,9 +27,19 @@ function PresensiForm() {
 
   const [nama, setNama] = useState('');
   const [alat, setAlat] = useState('');
+  const [alasanTerlambat, setAlasanTerlambat] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const isLate = () => {
+    if (isCompetition || !session || !session.tanggal_mulai || !session.jam_mulai) return false;
+    const [year, month, day] = session.tanggal_mulai.split('-').map(Number);
+    const [hour, minute] = session.jam_mulai.split(':').map(Number);
+    const scheduledDate = new Date(year, month - 1, day, hour, minute, 0);
+    const now = new Date();
+    return now > scheduledDate;
+  };
 
   useEffect(() => {
     if (!token) {
@@ -157,13 +167,20 @@ function PresensiForm() {
         return;
       }
 
+      if (isLate() && !alasanTerlambat.trim()) {
+        setSubmitError('Anda terlambat! Harap masukkan alasan keterlambatan.');
+        setIsSubmitting(false);
+        playChime('error');
+        return;
+      }
+
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081'}/api/public/practice-sessions/${token}/attend`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ nama, alat }),
+          body: JSON.stringify({ nama, alat, alasan_terlambat: alasanTerlambat }),
         });
 
         if (!response.ok) {
@@ -337,6 +354,31 @@ function PresensiForm() {
                     }}
                   />
                 </div>
+
+                {isLate() && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--danger)' }}>
+                      ⚠️ Alasan Keterlambatan (Terlambat)
+                    </label>
+                    <textarea
+                      required
+                      placeholder="Tulis alasan keterlambatan Anda secara manual..."
+                      value={alasanTerlambat}
+                      onChange={(e) => setAlasanTerlambat(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        borderRadius: 'var(--radius-sm)',
+                        border: '1px solid var(--border-color)',
+                        background: 'var(--bg-primary)',
+                        color: 'var(--text-primary)',
+                        minHeight: '80px',
+                        fontSize: '0.9rem',
+                        resize: 'vertical',
+                      }}
+                    />
+                  </div>
+                )}
               </>
             )}
 

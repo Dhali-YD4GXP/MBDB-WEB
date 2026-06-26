@@ -9,6 +9,8 @@ interface PracticeSession {
   title: string;
   token: string;
   is_active: boolean;
+  tanggal_mulai?: string;
+  jam_mulai?: string;
   created_at: string;
   closed_at?: string;
 }
@@ -18,6 +20,8 @@ interface AttendanceRecord {
   practice_session_id: number;
   nama: string;
   alat: string;
+  status?: string;
+  alasan_terlambat?: string;
   timestamp: string;
 }
 
@@ -33,6 +37,8 @@ export default function PracticeSessionsPage() {
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
   const [selectedSessionData, setSelectedSessionData] = useState<DetailResponse | null>(null);
   const [newTitle, setNewTitle] = useState('');
+  const [newTanggalMulai, setNewTanggalMulai] = useState('');
+  const [newJamMulai, setNewJamMulai] = useState('');
   const [isLoadingList, setIsLoadingList] = useState(true);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -60,6 +66,16 @@ export default function PracticeSessionsPage() {
 
     setRole(storedRole);
     fetchSessions();
+
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    setNewTanggalMulai(`${yyyy}-${mm}-${dd}`);
+
+    const hh = String(today.getHours()).padStart(2, '0');
+    const min = String(today.getMinutes()).padStart(2, '0');
+    setNewJamMulai(`${hh}:${min}`);
 
     return () => {
       stopPolling();
@@ -152,7 +168,11 @@ export default function PracticeSessionsPage() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ title: newTitle }),
+        body: JSON.stringify({
+          title: newTitle,
+          tanggal_mulai: newTanggalMulai,
+          jam_mulai: newJamMulai,
+        }),
       });
 
       if (!response.ok) {
@@ -292,6 +312,44 @@ export default function PracticeSessionsPage() {
                   }}
                 />
               </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Tanggal Mulai</label>
+                  <input
+                    type="date"
+                    required
+                    value={newTanggalMulai}
+                    onChange={(e) => setNewTanggalMulai(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-color)',
+                      background: 'var(--bg-primary)',
+                      color: 'var(--text-primary)',
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Jam Mulai</label>
+                  <input
+                    type="time"
+                    required
+                    value={newJamMulai}
+                    onChange={(e) => setNewJamMulai(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border-color)',
+                      background: 'var(--bg-primary)',
+                      color: 'var(--text-primary)',
+                    }}
+                  />
+                </div>
+              </div>
+
               <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={isSubmitting}>
                 {isSubmitting ? 'Memproses...' : '🚀 Mulai Sesi & Aktifkan QR'}
               </button>
@@ -383,8 +441,13 @@ export default function PracticeSessionsPage() {
                     Sesi {selectedSessionData.session.is_active ? 'Aktif' : 'Sudah Ditutup'}
                   </span>
                   <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>{selectedSessionData.session.title}</h2>
+                  {selectedSessionData.session.tanggal_mulai && selectedSessionData.session.jam_mulai && (
+                    <p style={{ fontSize: '0.875rem', color: 'var(--accent)', fontWeight: 600, margin: '0.25rem 0 0 0' }}>
+                      Jadwal Mulai: {selectedSessionData.session.tanggal_mulai} {selectedSessionData.session.jam_mulai}
+                    </p>
+                  )}
                   <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>
-                    Mulai: {new Date(selectedSessionData.session.created_at).toLocaleString('id-ID')}
+                    Dibuat: {new Date(selectedSessionData.session.created_at).toLocaleString('id-ID')}
                   </p>
                   {selectedSessionData.session.closed_at && (
                     <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: '0.1rem 0 0 0' }}>
@@ -495,12 +558,31 @@ export default function PracticeSessionsPage() {
                         }}
                       >
                         <div>
-                          <strong style={{ color: 'var(--text-primary)' }}>{att.nama}</strong>
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginLeft: '0.75rem', background: 'var(--bg-tertiary)', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>
-                            {att.alat}
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                            <strong style={{ color: 'var(--text-primary)' }}>{att.nama}</strong>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', background: 'var(--bg-tertiary)', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>
+                              {att.alat}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: '0.7rem',
+                                fontWeight: 700,
+                                padding: '0.1rem 0.4rem',
+                                borderRadius: 'var(--radius-full)',
+                                backgroundColor: att.status === 'Terlambat' ? 'var(--danger-light)' : 'var(--success-light)',
+                                color: att.status === 'Terlambat' ? 'var(--danger)' : 'var(--success)',
+                              }}
+                            >
+                              {att.status || 'Hadir'}
+                            </span>
+                          </div>
+                          {att.status === 'Terlambat' && att.alasan_terlambat && (
+                            <div style={{ fontSize: '0.775rem', color: 'var(--text-secondary)', marginTop: '0.25rem', fontStyle: 'italic' }}>
+                              Alasan: &ldquo;{att.alasan_terlambat}&rdquo;
+                            </div>
+                          )}
                         </div>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', flexShrink: 0 }}>
                           🕒 {new Date(att.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                         </span>
                       </div>
