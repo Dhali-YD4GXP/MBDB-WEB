@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -19,7 +20,7 @@ type MembersController struct {
 	DB *gorm.DB
 }
 
-// List returns all members (Admin & Official)
+// List returns all members with their attendance statistics (Admin & Official)
 func (mc *MembersController) List(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -44,8 +45,49 @@ func (mc *MembersController) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Calculate total practice sessions
+	var totalSessions int64
+	if err := mc.DB.Model(&models.PracticeSession{}).Count(&totalSessions).Error; err != nil {
+		totalSessions = 0
+	}
+
+	// Calculate attendance stats grouped by lowercase name
+	type AttendanceStats struct {
+		Nama  string
+		Count int64
+	}
+	var stats []AttendanceStats
+	if err := mc.DB.Model(&models.AttendanceRecord{}).
+		Select("LOWER(nama) as nama, COUNT(DISTINCT(practice_session_id)) as count").
+		Group("LOWER(nama)").
+		Scan(&stats).Error; err != nil {
+		log.Printf("Warning: failed to calculate member attendance stats: %v", err)
+	}
+
+	statsMap := make(map[string]int64)
+	for _, s := range stats {
+		statsMap[strings.ToLower(s.Nama)] = s.Count
+	}
+
+	// Construct response
+	type MemberWithStats struct {
+		models.Member
+		TotalLatihan int64 `json:"total_latihan"`
+		HadirLatihan int64 `json:"hadir_latihan"`
+	}
+
+	response := make([]MemberWithStats, len(members))
+	for i, m := range members {
+		hadir := statsMap[strings.ToLower(m.Nama)]
+		response[i] = MemberWithStats{
+			Member:       m,
+			TotalLatihan: totalSessions,
+			HadirLatihan: hadir,
+		}
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(members)
+	json.NewEncoder(w).Encode(response)
 }
 
 // Create manually registers a member (Admin only)

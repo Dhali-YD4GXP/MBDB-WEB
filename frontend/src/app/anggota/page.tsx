@@ -16,6 +16,8 @@ interface Member {
   kode_pendaftaran?: string;
   created_at: string;
   updated_at: string;
+  total_latihan?: number;
+  hadir_latihan?: number;
 }
 
 export default function MembersPage() {
@@ -431,6 +433,26 @@ export default function MembersPage() {
                   {member.nomor_anggota && <div>🔑 No. Anggota: <strong>{member.nomor_anggota}</strong></div>}
                   {member.kode_pendaftaran && (member.status === 'Aktif' || member.status === 'Alumni') && (
                     <div style={{ color: 'var(--accent)', fontWeight: 600 }}>🔑 Kode Aktivasi: {member.kode_pendaftaran}</div>
+                  )}
+                  {member.total_latihan !== undefined && (
+                    <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px dashed var(--border-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', fontSize: '0.85rem' }}>
+                        <span style={{ color: 'var(--text-secondary)' }}>📅 Kehadiran Latihan:</span>
+                        <strong style={{ color: 'var(--text-primary)' }}>
+                          {member.hadir_latihan || 0} / {member.total_latihan || 0} ({member.total_latihan > 0 ? Math.round(((member.hadir_latihan || 0) / member.total_latihan) * 100) : 0}%)
+                        </strong>
+                      </div>
+                      <div style={{ width: '100%', height: '6px', background: 'var(--border-color)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+                        <div
+                          style={{
+                            width: `${member.total_latihan > 0 ? Math.min(100, Math.round(((member.hadir_latihan || 0) / member.total_latihan) * 100)) : 0}%`,
+                            height: '100%',
+                            background: (member.hadir_latihan || 0) === member.total_latihan && member.total_latihan > 0 ? 'var(--success)' : 'var(--primary)',
+                            borderRadius: 'var(--radius-full)',
+                          }}
+                        />
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
