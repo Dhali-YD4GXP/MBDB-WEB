@@ -13,6 +13,17 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
+  const linkStyle = (active: boolean) => ({
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    color: active ? 'var(--accent)' : 'var(--text-secondary)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    height: '40px',
+    padding: '0 0.15rem',
+    transition: 'color var(--transition-fast)',
+  });
+
   useEffect(() => {
     // Read from localStorage on mount and when pathname changes
     const storedToken = localStorage.getItem('mbdb_token');
@@ -80,55 +91,35 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop Navigation */}
-        <div style={{ display: 'none', alignItems: 'center', gap: '1.25rem' }} className="desktop-nav">
+        <div style={{ display: 'none', alignItems: 'center', gap: '0.85rem' }} className="desktop-nav">
           <Link
             href="/"
-            style={{
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              color: pathname === '/' ? 'var(--accent)' : 'var(--text-secondary)',
-            }}
+            style={linkStyle(pathname === '/')}
           >
             Beranda
           </Link>
           <Link
             href="/organisasi"
-            style={{
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              color: pathname === '/organisasi' ? 'var(--accent)' : 'var(--text-secondary)',
-            }}
+            style={linkStyle(pathname === '/organisasi')}
           >
             Struktur
           </Link>
           <Link
             href="/pendaftaran"
-            style={{
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              color: pathname === '/pendaftaran' ? 'var(--accent)' : 'var(--text-secondary)',
-            }}
+            style={linkStyle(pathname === '/pendaftaran')}
           >
             Pendaftaran
           </Link>
           <Link
             href="/alumni"
-            style={{
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              color: pathname === '/alumni' ? 'var(--accent)' : 'var(--text-secondary)',
-            }}
+            style={linkStyle(pathname === '/alumni')}
           >
             Alumni
           </Link>
           {!token && (
             <Link
               href="/aktivasi"
-              style={{
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                color: pathname === '/aktivasi' ? 'var(--accent)' : 'var(--text-secondary)',
-              }}
+              style={linkStyle(pathname === '/aktivasi')}
             >
               Aktivasi Akun
             </Link>
@@ -137,11 +128,7 @@ export default function Navbar() {
           {token && role === 'Member' && (
             <Link
               href="/member"
-              style={{
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                color: pathname === '/member' ? 'var(--accent)' : 'var(--text-secondary)',
-              }}
+              style={linkStyle(pathname === '/member')}
             >
               Dashboard
             </Link>
@@ -150,11 +137,7 @@ export default function Navbar() {
           {token && (
             <Link
               href="/lost-reports"
-              style={{
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                color: pathname === '/lost-reports' ? 'var(--accent)' : 'var(--text-secondary)',
-              }}
+              style={linkStyle(pathname === '/lost-reports')}
             >
               Lapor Hilang
             </Link>
@@ -164,30 +147,21 @@ export default function Navbar() {
             <>
               <Link
                 href="/loading"
-                style={{
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  color: pathname === '/loading' ? 'var(--accent)' : 'var(--text-secondary)',
-                }}
+                style={linkStyle(pathname === '/loading')}
               >
                 Loading Logistik
               </Link>
               
               {/* Dropdown Menu for Management */}
               <div
-                style={{ position: 'relative' }}
+                style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', height: '40px' }}
                 onMouseEnter={() => setIsDropdownOpen(true)}
                 onMouseLeave={() => setIsDropdownOpen(false)}
               >
                 <button
                   style={{
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    color: isDropdownOpen || ['/instruments', '/anggota', '/finance', '/admin', '/admin/register-official', '/practice-sessions'].includes(pathname) ? 'var(--accent)' : 'var(--text-secondary)',
-                    display: 'flex',
-                    alignItems: 'center',
+                    ...linkStyle(isDropdownOpen || ['/instruments', '/anggota', '/finance', '/admin', '/admin/register-official', '/practice-sessions'].includes(pathname)),
                     gap: '0.25rem',
-                    padding: '0.5rem 0',
                     cursor: 'pointer',
                   }}
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
