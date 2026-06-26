@@ -363,3 +363,36 @@ func (mc *MembersController) Lookup(w http.ResponseWriter, r *http.Request) {
 		"message":          "Akun Anda belum diaktivasi. Silakan catat Nomor Anggota dan Kode Aktivasi di bawah untuk melakukan aktivasi.",
 	})
 }
+
+// ListAlumni returns all alumni (Public - no auth)
+func (mc *MembersController) ListAlumni(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var alumni []models.Member
+	if err := mc.DB.Where("status = ?", "Alumni").Order("angkatan desc, nama asc").Find(&alumni).Error; err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to fetch alumni"})
+		return
+	}
+
+	// Return a simplified list of public alumni info
+	type PublicAlumni struct {
+		ID       uint   `json:"id"`
+		Nama     string `json:"nama"`
+		Angkatan string `json:"angkatan"`
+		Alat     string `json:"alat"`
+	}
+
+	response := make([]PublicAlumni, len(alumni))
+	for i, a := range alumni {
+		response[i] = PublicAlumni{
+			ID:       a.ID,
+			Nama:     a.Nama,
+			Angkatan: a.Angkatan,
+			Alat:     a.Alat,
+		}
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}

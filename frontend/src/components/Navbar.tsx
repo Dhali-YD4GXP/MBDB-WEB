@@ -111,6 +111,16 @@ export default function Navbar() {
           >
             Pendaftaran Baru
           </Link>
+          <Link
+            href="/alumni"
+            style={{
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              color: pathname === '/alumni' ? 'var(--accent)' : 'var(--text-secondary)',
+            }}
+          >
+            Daftar Alumni
+          </Link>
           {!token && (
             <Link
               href="/aktivasi"
@@ -396,6 +406,16 @@ export default function Navbar() {
             }}
           >
             Pendaftaran Baru
+          </Link>
+          <Link
+            href="/alumni"
+            onClick={() => setIsMenuOpen(false)}
+            style={{
+              fontWeight: 600,
+              color: pathname === '/alumni' ? 'var(--accent)' : 'var(--text-primary)',
+            }}
+          >
+            Daftar Alumni
           </Link>
           {!token && (
             <Link

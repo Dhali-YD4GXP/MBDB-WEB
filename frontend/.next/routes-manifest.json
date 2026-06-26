@@ -60,6 +60,12 @@
       "namedRegex": "^/aktivasi(?:/)?$"
     },
     {
+      "page": "/alumni",
+      "regex": "^/alumni(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/alumni(?:/)?$"
+    },
+    {
       "page": "/anggota",
       "regex": "^/anggota(?:/)?$",
       "routeKeys": {},

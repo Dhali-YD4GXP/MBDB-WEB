@@ -4,6 +4,7 @@
   "/admin/page": "/admin",
   "/admin/register-official/page": "/admin/register-official",
   "/aktivasi/page": "/aktivasi",
+  "/alumni/page": "/alumni",
   "/anggota/page": "/anggota",
   "/competition-sessions/page": "/competition-sessions",
   "/favicon.ico/route": "/favicon.ico",
