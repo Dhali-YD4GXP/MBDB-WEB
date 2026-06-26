@@ -386,7 +386,7 @@ export default function AktivasiPage() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Tahun Angkatan</label>
+                  <label className="form-label">Angkatan</label>
                   <input
                     type="text"
                     className="form-input"

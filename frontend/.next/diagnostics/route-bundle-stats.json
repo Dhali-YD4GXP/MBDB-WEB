@@ -148,11 +148,11 @@
   },
   {
     "route": "/aktivasi",
-    "firstLoadUncompressedJsBytes": 552987,
+    "firstLoadUncompressedJsBytes": 552981,
     "firstLoadChunkPaths": [
       ".next/static/chunks/18mt2g7x_q-yi.js",
       ".next/static/chunks/14mrh2-p_w84d.js",
-      ".next/static/chunks/3zxkolyb7tues.js",
+      ".next/static/chunks/3dszubl_w9p8m.js",
       ".next/static/chunks/1gdoryk6w2r8v.js",
       ".next/static/chunks/27jktro2p5rq9.js",
       ".next/static/chunks/2nykiepra7i1k.js",
@@ -190,11 +190,11 @@
   },
   {
     "route": "/login",
-    "firstLoadUncompressedJsBytes": 545606,
+    "firstLoadUncompressedJsBytes": 545641,
     "firstLoadChunkPaths": [
       ".next/static/chunks/18mt2g7x_q-yi.js",
       ".next/static/chunks/14mrh2-p_w84d.js",
-      ".next/static/chunks/2o8vzgztlh2w2.js",
+      ".next/static/chunks/19qjfoo2zzc35.js",
       ".next/static/chunks/1gdoryk6w2r8v.js",
       ".next/static/chunks/27jktro2p5rq9.js",
       ".next/static/chunks/2nykiepra7i1k.js",

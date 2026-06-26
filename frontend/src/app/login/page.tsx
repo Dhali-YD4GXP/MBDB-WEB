@@ -132,11 +132,11 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div className="form-group">
-            <label className="form-label">Username</label>
+            <label className="form-label">Nomor Anggota / Username</label>
             <input
               type="text"
               className="form-input"
-              placeholder="Masukkan username Anda"
+              placeholder="Masukkan Nomor Anggota atau Username Anda"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
