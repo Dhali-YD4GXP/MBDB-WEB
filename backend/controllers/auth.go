@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -53,6 +54,13 @@ func (ac *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	if err := ac.DB.Where("username = ?", req.Username).First(&user).Error; err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid username or password"})
+		return
+	}
+
+	// Check if account has been activated
+	if user.Password == "" {
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Akun Anda belum diaktivasi. Silakan lakukan aktivasi akun terlebih dahulu."})
 		return
 	}
 
@@ -147,4 +155,107 @@ func (ac *AuthController) RegisterOfficial(w http.ResponseWriter, r *http.Reques
 			"role":     newOfficial.Role,
 		},
 	})
+}
+
+type ActivateRequest struct {
+	NomorAnggota    string `json:"nomor_anggota"`
+	KodePendaftaran string `json:"kode_pendaftaran"`
+	Password        string `json:"password"`
+}
+
+// Activate handles first-time account activation for active members
+func (ac *AuthController) Activate(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	var req ActivateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request payload"})
+		return
+	}
+
+	req.NomorAnggota = strings.TrimSpace(req.NomorAnggota)
+	req.KodePendaftaran = strings.TrimSpace(req.KodePendaftaran)
+	req.Password = strings.TrimSpace(req.Password)
+
+	if req.NomorAnggota == "" || req.KodePendaftaran == "" || req.Password == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Nomor Anggota, Kode Pendaftaran, dan Password wajib diisi"})
+		return
+	}
+
+	if len(req.Password) < 6 {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Password minimal harus 6 karakter"})
+		return
+	}
+
+	// Find the member record
+	var member models.Member
+	if err := ac.DB.Where("nomor_anggota = ? AND kode_pendaftaran = ?", req.NomorAnggota, req.KodePendaftaran).First(&member).Error; err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Nomor Anggota atau Kode Pendaftaran tidak cocok/ditemukan"})
+		return
+	}
+
+	// Find the corresponding User record
+	var user models.User
+	if err := ac.DB.Where("username = ?", req.NomorAnggota).First(&user).Error; err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Akun login untuk Nomor Anggota tersebut tidak ditemukan"})
+		return
+	}
+
+	// Check if already activated
+	if user.Password != "" {
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Akun Anda sudah diaktivasi sebelumnya. Silakan langsung login."})
+		return
+	}
+
+	// Hash password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Gagal memproses password"})
+		return
+	}
+
+	user.Password = string(hashedPassword)
+	if err := ac.DB.Save(&user).Error; err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Gagal mengaktivasi akun"})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Akun berhasil diaktivasi! Silakan login menggunakan Nomor Anggota Anda."})
+}
+
+// Me returns the details of the currently logged-in user
+func (ac *AuthController) Me(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	currentUser, err := middleware.GetUserFromContext(r)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized"})
+		return
+	}
+
+	response := map[string]interface{}{
+		"id":       currentUser.ID,
+		"username": currentUser.Username,
+		"role":     currentUser.Role,
+	}
+
+	if currentUser.Role == "Member" {
+		var member models.Member
+		if err := ac.DB.Where("nomor_anggota = ?", currentUser.Username).First(&member).Error; err == nil {
+			response["member"] = member
+		}
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }

@@ -28,6 +28,7 @@ func SetupRoutes(db *gorm.DB) *http.ServeMux {
 
 	// 1. PUBLIC ROUTES
 	mux.HandleFunc("POST /api/auth/login", authCtrl.Login)
+	mux.HandleFunc("POST /api/auth/activate", authCtrl.Activate)
 	mux.HandleFunc("POST /api/applicants", appCtrl.Register)
 	mux.HandleFunc("GET /api/agendas", agendasCtrl.List)
 	mux.HandleFunc("GET /api/org-structure", orgCtrl.Get)
@@ -100,6 +101,12 @@ func SetupRoutes(db *gorm.DB) *http.ServeMux {
 	mux.Handle("GET /api/instruments", staffAuth(http.HandlerFunc(instCtrl.List)))
 	mux.Handle("GET /api/instruments/{id}", staffAuth(http.HandlerFunc(instCtrl.Detail)))
 	mux.Handle("PUT /api/instruments/{id}", staffAuth(http.HandlerFunc(instCtrl.Update)))
+	
+	memberAuth := middleware.AuthMiddleware(db, "Member", "Official", "Admin")
+	mux.Handle("POST /api/instruments/{id}/claim", memberAuth(http.HandlerFunc(instCtrl.Claim)))
+	
+	anyAuth := middleware.AuthMiddleware(db, "Member", "Official", "Admin", "Bendahara")
+	mux.Handle("GET /api/auth/me", anyAuth(http.HandlerFunc(authCtrl.Me)))
 
 	// Sessions Management (Practice/Event loading)
 	mux.Handle("POST /api/sessions", staffAuth(http.HandlerFunc(sessCtrl.Start)))

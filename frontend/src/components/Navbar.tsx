@@ -112,7 +112,20 @@ export default function Navbar() {
             Pendaftaran Baru
           </Link>
 
-          {token && (
+          {token && role === 'Member' && (
+            <Link
+              href="/member"
+              style={{
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                color: pathname === '/member' ? 'var(--accent)' : 'var(--text-secondary)',
+              }}
+            >
+              Dashboard Anggota
+            </Link>
+          )}
+
+          {token && (role === 'Admin' || role === 'Official') && (
             <>
               <Link
                 href="/loading"
@@ -198,7 +211,7 @@ export default function Navbar() {
                       👥 Daftar Anggota
                     </Link>
 
-                    {(role === 'Bendahara' || role === 'Admin') && (
+                    {((role as string) === 'Bendahara' || role === 'Admin') && (
                       <Link
                         href="/finance"
                         onClick={() => setIsDropdownOpen(false)}
@@ -373,7 +386,20 @@ export default function Navbar() {
             Pendaftaran Baru
           </Link>
 
-          {token && (
+          {token && role === 'Member' && (
+            <Link
+              href="/member"
+              onClick={() => setIsMenuOpen(false)}
+              style={{
+                fontWeight: 600,
+                color: pathname === '/member' ? 'var(--accent)' : 'var(--text-primary)',
+              }}
+            >
+              Dashboard Anggota
+            </Link>
+          )}
+
+          {token && (role === 'Admin' || role === 'Official') && (
             <>
               <Link
                 href="/loading"

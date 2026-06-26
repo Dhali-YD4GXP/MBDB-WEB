@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { api } from '../../utils/api';
 
 export default function Login() {
@@ -18,6 +19,10 @@ export default function Login() {
     if (token) {
       if (role === 'Admin') {
         router.push('/admin');
+      } else if (role === 'Member') {
+        router.push('/member');
+      } else if (role === 'Bendahara') {
+        router.push('/finance');
       } else {
         router.push('/loading');
       }
@@ -52,6 +57,10 @@ export default function Login() {
       // Redirect depending on role
       if (response.role === 'Admin') {
         router.push('/admin');
+      } else if (response.role === 'Member') {
+        router.push('/member');
+      } else if (response.role === 'Bendahara') {
+        router.push('/finance');
       } else {
         router.push('/loading');
       }
@@ -182,6 +191,22 @@ export default function Login() {
             )}
           </button>
         </form>
+
+        <div style={{ textAlign: 'center', marginTop: '1.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.25rem' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', margin: 0 }}>
+            Anggota baru?{' '}
+            <Link
+              href="/aktivasi"
+              style={{
+                color: 'var(--accent)',
+                fontWeight: 600,
+                textDecoration: 'underline',
+              }}
+            >
+              Aktivasi Akun di sini
+            </Link>
+          </p>
+        </div>
       </div>
 
       <style jsx>{`
