@@ -11,9 +11,10 @@ Aplikasi ini adalah sistem manajemen internal dan portal publik untuk **MBDB Sma
 - **Infrastruktur VPS:** Aplikasi akan dideploy pada VPS mandiri dengan domain kustom menggunakan Nginx/Caddy sebagai Reverse Proxy, serta pembatasan CORS yang ketat antara domain frontend dan backend.
 
 ## 3. Manajemen Hak Akses (Role-Based Access Control - RBAC)
-1. **Guest / Publik (Tanpa Login):** Hanya dapat mengakses halaman pendaftaran anggota baru.
-2. **Official / Tim Loading (Memerlukan Login):** Dapat mengelola inventaris alat, melakukan scan QR Code, dan mengelola sesi latihan/event.
-3. **Admin (Memerlukan Login):** Memiliki semua akses Official, ditambah kemampuan membuat akun untuk Official/Tim Loading, mengubah status pendaftaran anggota baru, dan mengeksport data ke CSV.
+1. **Guest / Publik (Tanpa Login):** Hanya dapat mengakses halaman pendaftaran anggota baru dan melakukan pencarian kode aktivasi mandiri.
+2. **Member (Aktif / Alumni) (Memerlukan Login):** Dapat mengakses dasbor pribadi, mengunduh nametag PDF kustom, mengklaim/mengembalikan alat musik via scan QR secara mandiri, dan melakukan presensi kehadiran latihan/lomba dengan melakukan scan QR sesi.
+3. **Official / Tim Loading (Memerlukan Login):** Dapat mengelola inventaris alat, melakukan scan QR Code logistik alat, dan mengelola sesi latihan/event.
+4. **Admin (Memerlukan Login):** Memiliki semua akses Official, ditambah kemampuan membuat akun untuk Official/Tim Loading, mengubah status pendaftaran anggota baru, meluluskan/mengaktifkan anggota, melihat kode aktivasi semua anggota, dan mengeksport data pendaftar & presensi ke CSV.
 
 ## 4. Spesifikasi Fitur & Logika Bisnis
 
@@ -58,17 +59,29 @@ Fitur ini hanya muncul dan dapat digunakan setelah pengguna (Admin atau Official
    - **Audit Trail (Log Transparansi):**
      - Setiap aktivitas pemindaian (baik saat keluar maupun masuk) harus merekam data: `Timestamp` (waktu presisi) dan `Nama User/Akun Official` yang melakukan scanning tersebut. Riwayat ini harus ditampilkan pada detail sesi untuk menghindari perselisihan internal.
 
+### C. Fitur Aktivasi & Dasbor Anggota/Alumni (Self-Service)
+- **Aktivasi Akun:** Anggota baru maupun lama/alumni yang belum aktif dapat mengeset password login pertama kali menggunakan `Nomor Anggota` dan `Kode Aktivasi`.
+- **Pencarian Kredensial Mandiri (Lookup):** Anggota lama/alumni dapat mencari `Nomor Anggota` dan `Kode Aktivasi` mereka secara mandiri di halaman `/aktivasi` dengan memasukkan tiga parameter validasi: Nama Lengkap, Tahun Angkatan, dan Alat/Seksi Utama.
+- **Keamanan Kredensial:** Pencarian hanya akan menampilkan `Kode Aktivasi` jika akun bersangkutan belum pernah diaktivasi (password kosong). Jika sudah aktif, sistem menolak menampilkan kode dan mengarahkan untuk login langsung.
+- **Dasbor Member (Aktif & Alumni):**
+  - Melihat informasi profil diri (nama, nomor anggota, kelas, alat, angkatan, status).
+  - Mengunduh Name Tag resmi dalam format PDF berdimensi kustom 9x5.5cm.
+  - Melakukan presensi mandiri untuk latihan & lomba dengan memindai QR code sesi yang ditampilkan admin/staff.
+  - Melakukan klaim pemegang alat musik dengan memindai QR code alat secara mandiri.
+  - Melakukan pengembalian alat musik ke gudang langsung dari dasbor web anggota.
+
 ## 5. Panduan Teknis untuk AI Client
 
 ### Struktur Database (Referensi Entitas)
-- **Users:** ID, Username, Password (Hashed), Role (`Admin`, `Official`).
+- **Users:** ID, Username, Password (Hashed), Role (`Admin`, `Official`, `Member`, `Bendahara`).
 - **Applicants:** ID, Nama, Kelas, FotoPath, Pilihan1, Pilihan2, Pilihan3, Status (`Pending`, `Accepted`, `Rejected`), CreatedAt.
+- **Members:** ID, NomorAnggota (Unique), Nama, Kelas, Alat, Status (`Aktif`, `Alumni`), Angkatan, KodePendaftaran, CreatedAt, UpdatedAt.
 - **Instruments:** ID (UUID/ShortID untuk QR), JenisAlat, Kondisi, NamaPenggunaTerakhir, CreatedAt.
 - **Sessions:** ID, NamaSesi, IsActive (Boolean), StartAt, EndAt.
 - **SessionLogs:** ID, SessionID, InstrumentID, Status (`Keluar`, `Masuk`), ScannedBy (UserID), Timestamp.
 
 ### Batasan Keamanan & Performa
 - **Validasi File:** Implementasikan middleware di Go untuk memeriksa *magic bytes* file upload, memastikan file yang diunggah benar-benar gambar, bukan skrip berbahaya.
-- **Static Static Route:** Pastikan backend Go mengonfigurasi routing statis (secure static file serving) agar frontend Next.js dapat menampilkan pas foto pendaftar dengan aman.
+- **Static Route:** Pastikan backend Go mengonfigurasi routing statis (secure static file serving) agar frontend Next.js dapat menampilkan pas foto pendaftar dengan aman.
 - **QR Code Scanner:** Gunakan pustaka scanner berbasis client-side di Next.js (seperti `html5-qrcode` atau sejenisnya) yang ringan dan dapat mendeteksi kamera belakang smartphone secara otomatis.
 - **Autentikasi:** Amankan seluruh API endpoint inventarisasi menggunakan JWT atau sistem session token yang divalidasi oleh backend Go.
