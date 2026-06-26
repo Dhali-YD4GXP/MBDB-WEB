@@ -1,0 +1,15 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/lost-reports/layout,_N_T_/lost-reports/page,_N_T_/lost-reports"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/lost-reports/__PAGE__",
+    "/lost-reports",
+    "/_index",
+    "/_head"
+  ]
+}

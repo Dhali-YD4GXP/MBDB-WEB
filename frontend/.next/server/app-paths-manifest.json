@@ -12,6 +12,7 @@
   "/instruments/page": "app/instruments/page.js",
   "/loading/page": "app/loading/page.js",
   "/login/page": "app/login/page.js",
+  "/lost-reports/page": "app/lost-reports/page.js",
   "/member/page": "app/member/page.js",
   "/organisasi/page": "app/organisasi/page.js",
   "/page": "app/page.js",
