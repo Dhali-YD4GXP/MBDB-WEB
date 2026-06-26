@@ -7,11 +7,13 @@ import { api } from '../../utils/api';
 
 interface Member {
   id: number;
+  nomor_anggota?: string;
   nama: string;
   kelas: string;
   alat: string;
   status: 'Aktif' | 'Alumni';
   angkatan?: string;
+  kode_pendaftaran?: string;
   created_at: string;
   updated_at: string;
 }
@@ -426,6 +428,10 @@ export default function MembersPage() {
                   <div>🏫 Kelas: <strong>{member.kelas}</strong></div>
                   <div>🎷 Alat: <strong>{member.alat}</strong></div>
                   <div>🎓 Angkatan: <strong>{member.angkatan || '-'}</strong></div>
+                  {member.nomor_anggota && <div>🔑 No. Anggota: <strong>{member.nomor_anggota}</strong></div>}
+                  {member.kode_pendaftaran && member.status === 'Aktif' && (
+                    <div style={{ color: 'var(--accent)', fontWeight: 600 }}>🔑 Kode Aktivasi: {member.kode_pendaftaran}</div>
+                  )}
                 </div>
               </div>
 
