@@ -429,7 +429,7 @@ export default function MembersPage() {
                   <div>🎷 Alat: <strong>{member.alat}</strong></div>
                   <div>🎓 Angkatan: <strong>{member.angkatan || '-'}</strong></div>
                   {member.nomor_anggota && <div>🔑 No. Anggota: <strong>{member.nomor_anggota}</strong></div>}
-                  {member.kode_pendaftaran && member.status === 'Aktif' && (
+                  {member.kode_pendaftaran && (member.status === 'Aktif' || member.status === 'Alumni') && (
                     <div style={{ color: 'var(--accent)', fontWeight: 600 }}>🔑 Kode Aktivasi: {member.kode_pendaftaran}</div>
                   )}
                 </div>
@@ -454,7 +454,7 @@ export default function MembersPage() {
                   >
                     ✏️ Edit
                   </button>
-                  {member.status === 'Aktif' && (
+                  {(member.status === 'Aktif' || member.status === 'Alumni') && (
                     <button
                       onClick={() => handleDownloadNametag(member)}
                       className="btn btn-outline"

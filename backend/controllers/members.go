@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -91,20 +93,56 @@ func (mc *MembersController) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	activationCode := ""
+	var nomorAnggota string
+	if req.Status == "Aktif" || req.Status == "Alumni" {
+		angkatanClean := strings.TrimSpace(req.Angkatan)
+		if angkatanClean == "" {
+			angkatanClean = "XX"
+		}
+		var count int64
+		mc.DB.Model(&models.Member{}).Where("angkatan = ?", req.Angkatan).Count(&count)
+		nomorUrut := fmt.Sprintf("%03d", count+1)
+		nomorAnggota = fmt.Sprintf("MBDB-%s-%s", angkatanClean, nomorUrut)
+
+		// generate a random unique registration code for activation
+		const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+		bytes := make([]byte, 6)
+		_, _ = rand.Read(bytes)
+		for i, b := range bytes {
+			bytes[i] = chars[b%byte(len(chars))]
+		}
+		activationCode = "REG-" + string(bytes)
+	}
+
 	newMember := models.Member{
-		Nama:      req.Nama,
-		Kelas:     req.Kelas,
-		Alat:      req.Alat,
-		Status:    req.Status,
-		Angkatan:  req.Angkatan,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		NomorAnggota:    nomorAnggota,
+		Nama:            req.Nama,
+		Kelas:           req.Kelas,
+		Alat:            req.Alat,
+		Status:          req.Status,
+		Angkatan:        req.Angkatan,
+		KodePendaftaran: activationCode,
+		CreatedAt:       time.Now(),
+		UpdatedAt:       time.Now(),
 	}
 
 	if err := mc.DB.Create(&newMember).Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Gagal menambahkan anggota"})
 		return
+	}
+
+	if req.Status == "Aktif" || req.Status == "Alumni" {
+		newUser := models.User{
+			Username:  nomorAnggota,
+			Password:  "", // inactive until set by user
+			Role:      "Member",
+			CreatedAt: time.Now(),
+		}
+		if err := mc.DB.Create(&newUser).Error; err != nil {
+			fmt.Printf("Gagal membuat akun user anggota manual: %v\n", err)
+		}
 	}
 
 	w.WriteHeader(http.StatusCreated)

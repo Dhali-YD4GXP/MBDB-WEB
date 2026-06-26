@@ -121,14 +121,16 @@ type AttendanceRecord struct {
 
 // Member represents the active and alumni members of the marching band
 type Member struct {
-	ID        uint      `gorm:"primaryKey" json:"id"`
-	Nama      string    `gorm:"not null;type:varchar(150)" json:"nama"`
-	Kelas     string    `gorm:"not null;type:varchar(50)" json:"kelas"`
-	Alat      string    `gorm:"not null;type:varchar(100)" json:"alat"`
-	Status    string    `gorm:"not null;type:varchar(20);default:'Aktif'" json:"status"` // "Aktif" or "Alumni"
-	Angkatan  string    `gorm:"type:varchar(50)" json:"angkatan"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID              uint      `gorm:"primaryKey" json:"id"`
+	NomorAnggota    string    `gorm:"type:varchar(50);uniqueIndex" json:"nomor_anggota"`
+	Nama            string    `gorm:"not null;type:varchar(150)" json:"nama"`
+	Kelas           string    `gorm:"not null;type:varchar(50)" json:"kelas"`
+	Alat            string    `gorm:"not null;type:varchar(100)" json:"alat"`
+	Status          string    `gorm:"not null;type:varchar(20);default:'Aktif'" json:"status"` // "Aktif" or "Alumni"
+	Angkatan        string    `gorm:"type:varchar(50)" json:"angkatan"`
+	KodePendaftaran string    `gorm:"type:varchar(50)" json:"kode_pendaftaran"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 // CompetitionSession represents a competition event with attendance roster

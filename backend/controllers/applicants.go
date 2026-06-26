@@ -240,17 +240,44 @@ func (ac *ApplicantsController) UpdateStatus(w http.ResponseWriter, r *http.Requ
 
 	// Auto-add to active members if status changed to Accepted
 	if req.Status == "Accepted" && oldStatus != "Accepted" {
+		angkatanClean := strings.TrimSpace(applicant.Angkatan)
+		if angkatanClean == "" {
+			angkatanClean = "XX"
+		}
+		
+		// Count existing members in this cohort to get the next sequence number
+		var count int64
+		ac.DB.Model(&models.Member{}).Where("angkatan = ?", applicant.Angkatan).Count(&count)
+		nomorUrut := fmt.Sprintf("%03d", count+1)
+		nomorAnggota := fmt.Sprintf("MBDB-%s-%s", angkatanClean, nomorUrut)
+
 		newMember := models.Member{
-			Nama:      applicant.Nama,
-			Kelas:     applicant.Kelas,
-			Alat:      req.AlatDiterima, // Use the accepted instrument
-			Status:    "Aktif",
-			Angkatan:  applicant.Angkatan,
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			NomorAnggota:    nomorAnggota,
+			Nama:            applicant.Nama,
+			Kelas:           applicant.Kelas,
+			Alat:            req.AlatDiterima, // Use the accepted instrument
+			Status:          "Aktif",
+			Angkatan:        applicant.Angkatan,
+			KodePendaftaran: applicant.KodePendaftaran,
+			CreatedAt:       time.Now(),
+			UpdatedAt:       time.Now(),
 		}
 		if err := ac.DB.Create(&newMember).Error; err != nil {
 			fmt.Printf("Gagal menambahkan anggota aktif otomatis: %v\n", err)
+		} else {
+			// Create inactive User account
+			// Username = NomorAnggota
+			// Password = "" (signifying not activated)
+			// Role = "Member"
+			newUser := models.User{
+				Username:  nomorAnggota,
+				Password:  "", // inactive until set by user
+				Role:      "Member",
+				CreatedAt: time.Now(),
+			}
+			if err := ac.DB.Create(&newUser).Error; err != nil {
+				fmt.Printf("Gagal membuat akun user anggota: %v\n", err)
+			}
 		}
 	}
 

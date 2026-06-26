@@ -1,6 +1,7 @@
 package config
 
 import (
+	"crypto/rand"
 	"fmt"
 	"log"
 	"os"
@@ -137,6 +138,9 @@ func InitDB() *gorm.DB {
 	// Ensure organization structure exists
 	seedOrgStructure()
 
+	// Self-healing migration to create user accounts for existing members/alumni
+	migrateExistingAlumniAccounts()
+
 	return DB
 }
 
@@ -194,4 +198,62 @@ func seedOrgStructure() {
 			log.Println("Successfully seeded default Org Structure.")
 		}
 	}
+}
+
+// migrateExistingAlumniAccounts scans the database for any members (active/alumni)
+// who do not have a NomorAnggota or User account, and generates them automatically.
+func migrateExistingAlumniAccounts() {
+	var members []models.Member
+	if err := DB.Where("nomor_anggota = ? OR nomor_anggota IS NULL", "").Find(&members).Error; err != nil {
+		log.Printf("Migration warning: failed to fetch members without nomor_anggota: %v", err)
+		return
+	}
+
+	if len(members) == 0 {
+		return
+	}
+
+	log.Printf("Found %d members without Nomor Anggota. Starting auto-migration...", len(members))
+
+	for i := range members {
+		m := &members[i]
+		angkatanClean := strings.TrimSpace(m.Angkatan)
+		if angkatanClean == "" {
+			angkatanClean = "XX"
+		}
+		
+		var count int64
+		DB.Model(&models.Member{}).Where("angkatan = ? AND nomor_anggota != ? AND nomor_anggota IS NOT NULL", m.Angkatan, "").Count(&count)
+		nomorUrut := fmt.Sprintf("%03d", count+1)
+		m.NomorAnggota = fmt.Sprintf("MBDB-%s-%s", angkatanClean, nomorUrut)
+
+		// Generate activation code
+		const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+		bytes := make([]byte, 6)
+		_, _ = rand.Read(bytes)
+		for j, b := range bytes {
+			bytes[j] = chars[b%byte(len(chars))]
+		}
+		m.KodePendaftaran = "REG-" + string(bytes)
+
+		// Save the member
+		if err := DB.Save(m).Error; err != nil {
+			log.Printf("Migration error: failed to save member %s: %v", m.Nama, err)
+			continue
+		}
+
+		// Create the corresponding User record
+		newUser := models.User{
+			Username:  m.NomorAnggota,
+			Password:  "", // inactive until set by user
+			Role:      "Member",
+			CreatedAt: time.Now(),
+		}
+		if err := DB.Create(&newUser).Error; err != nil {
+			log.Printf("Migration error: failed to create user account for member %s: %v", m.Nama, err)
+		} else {
+			log.Printf("Migration success: created account %s (activation code: %s) for %s", m.NomorAnggota, m.KodePendaftaran, m.Nama)
+		}
+	}
+	log.Println("Database auto-migration for existing members completed.")
 }
