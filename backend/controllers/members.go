@@ -69,11 +69,25 @@ func (mc *MembersController) List(w http.ResponseWriter, r *http.Request) {
 		statsMap[strings.ToLower(s.Nama)] = s.Count
 	}
 
+	// Query active users to see who has activated their account (password is set)
+	var activeUsernames []string
+	if err := mc.DB.Model(&models.User{}).
+		Where("password <> ?", "").
+		Pluck("username", &activeUsernames).Error; err != nil {
+		log.Printf("Warning: failed to query active member usernames: %v", err)
+	}
+
+	activeUserMap := make(map[string]bool)
+	for _, username := range activeUsernames {
+		activeUserMap[strings.ToLower(strings.TrimSpace(username))] = true
+	}
+
 	// Construct response
 	type MemberWithStats struct {
 		models.Member
 		TotalLatihan int64 `json:"total_latihan"`
 		HadirLatihan int64 `json:"hadir_latihan"`
+		IsActivated  bool  `json:"is_activated"`
 	}
 
 	response := make([]MemberWithStats, len(members))
@@ -83,6 +97,7 @@ func (mc *MembersController) List(w http.ResponseWriter, r *http.Request) {
 			Member:       m,
 			TotalLatihan: totalSessions,
 			HadirLatihan: hadir,
+			IsActivated:  activeUserMap[strings.ToLower(strings.TrimSpace(m.NomorAnggota))],
 		}
 	}
 

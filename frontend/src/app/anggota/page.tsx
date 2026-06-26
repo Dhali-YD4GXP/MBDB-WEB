@@ -18,6 +18,7 @@ interface Member {
   updated_at: string;
   total_latihan?: number;
   hadir_latihan?: number;
+  is_activated?: boolean;
 }
 
 export default function MembersPage() {
@@ -431,6 +432,22 @@ export default function MembersPage() {
                   <div>🎷 Alat: <strong>{member.alat}</strong></div>
                   <div>🎓 Angkatan: <strong>{member.angkatan || '-'}</strong></div>
                   {member.nomor_anggota && <div>🔑 No. Anggota: <strong>{member.nomor_anggota}</strong></div>}
+                  <div>
+                    🌐 Status Akun:{' '}
+                    <span
+                      style={{
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        padding: '0.15rem 0.5rem',
+                        borderRadius: 'var(--radius-full)',
+                        background: member.is_activated ? 'var(--success-light)' : 'var(--danger-light)',
+                        color: member.is_activated ? 'var(--success)' : 'var(--danger)',
+                        display: 'inline-block',
+                      }}
+                    >
+                      {member.is_activated ? 'Sudah Aktivasi' : 'Belum Aktivasi'}
+                    </span>
+                  </div>
                   {member.kode_pendaftaran && (member.status === 'Aktif' || member.status === 'Alumni') && (
                     <div style={{ color: 'var(--accent)', fontWeight: 600 }}>🔑 Kode Aktivasi: {member.kode_pendaftaran}</div>
                   )}
