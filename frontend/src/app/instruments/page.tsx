@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import QRCode from 'qrcode';
+import { jsPDF } from 'jspdf';
 import { api } from '../../utils/api';
 import { Instrument } from '../../types';
 
@@ -26,6 +27,7 @@ export default function InstrumentsPage() {
   // Search / Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [filterKondisi, setFilterKondisi] = useState('');
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   useEffect(() => {
     // Auth Guard
@@ -124,6 +126,69 @@ export default function InstrumentsPage() {
     document.body.appendChild(a);
     a.click();
     a.remove();
+  };
+
+  const handleDownloadAllQR = async () => {
+    if (filteredInstruments.length === 0) return;
+    setIsGeneratingPdf(true);
+    try {
+      const qrPromises = filteredInstruments.map(async (inst) => {
+        const qrUrl = await QRCode.toDataURL(inst.id, {
+          width: 200,
+          margin: 1
+        });
+        return { inst, qrUrl };
+      });
+      const qrCodes = await Promise.all(qrPromises);
+      
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'cm',
+        format: 'a4'
+      });
+      
+      const colCount = 3;
+      const rowCount = 4;
+      const itemsPerPage = colCount * rowCount;
+      
+      qrCodes.forEach((item, index) => {
+        if (index > 0 && index % itemsPerPage === 0) {
+          doc.addPage();
+        }
+        
+        const pageIndex = index % itemsPerPage;
+        const col = pageIndex % colCount;
+        const row = Math.floor(pageIndex / colCount);
+        
+        // Col width 5cm, spacing 1.5cm, margins 1.5cm left/right
+        const x = 1.5 + col * (5 + 1.5);
+        // Row height 5.2cm, spacing 1.0cm, margins 2.0cm top
+        const y = 2.0 + row * (5.2 + 1);
+        
+        // Add QR image (centered in the 5cm column box, so offset x by 0.5cm)
+        doc.addImage(item.qrUrl, 'PNG', x + 0.5, y, 4, 4);
+        
+        // Draw centered caption text under QR code
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.text(item.inst.id, x + 2.5, y + 4.4, { align: 'center' });
+        
+        doc.setFont('Helvetica', 'normal');
+        doc.setFontSize(7);
+        let labelText = item.inst.jenis_alat;
+        if (labelText.length > 25) {
+          labelText = labelText.substring(0, 22) + '...';
+        }
+        doc.text(labelText, x + 2.5, y + 4.9, { align: 'center' });
+      });
+      
+      doc.save('inventaris_qr_codes.pdf');
+    } catch (err) {
+      console.error('Failed to generate QR PDF', err);
+      alert('Gagal membuat file PDF QR Code.');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   // View QR Code for existing instrument
@@ -288,6 +353,46 @@ export default function InstrumentsPage() {
                   <option value="Rusak Total">Rusak Total</option>
                 </select>
               </div>
+
+              {filteredInstruments.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleDownloadAllQR}
+                  className="btn btn-primary"
+                  disabled={isGeneratingPdf}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.65rem 1.25rem',
+                    margin: 0,
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                  }}
+                  title="Unduh semua QR Code hasil pencarian/saringan dalam satu file PDF"
+                >
+                  {isGeneratingPdf ? (
+                    <>
+                      <svg
+                        style={{ animation: 'spin 1s linear infinite' }}
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                      >
+                        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                      </svg>
+                      <span>Memproses...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>📥 Unduh QR PDF ({filteredInstruments.length})</span>
+                    </>
+                  )}
+                </button>
+              )}
             </div>
 
             {/* List */}
