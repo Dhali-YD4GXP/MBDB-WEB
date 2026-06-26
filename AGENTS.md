@@ -66,9 +66,23 @@ Fitur ini hanya muncul dan dapat digunakan setelah pengguna (Admin atau Official
 - **Dasbor Member (Aktif & Alumni):**
   - Melihat informasi profil diri (nama, nomor anggota, kelas, alat, angkatan, status).
   - Mengunduh Name Tag resmi dalam format PDF berdimensi kustom 9x5.5cm.
-  - Melakukan presensi mandiri untuk latihan & lomba dengan memindai QR code sesi yang ditampilkan admin/staff.
+  - Melakukan presensi mandiri untuk latihan & lomba dengan memindai QR code sesi yang ditampilkan admin/staff. Jika terlambat (melebihi jam mulai sesi latihan), wajib mengisi alasan keterlambatan secara manual.
   - Melakukan klaim pemegang alat musik dengan memindai QR code alat secara mandiri.
-  - Melakukan pengembalian alat musik ke gudang langsung dari dasbor web anggota.
+  - Melakukan pengembalian alat musik ke gudang dengan memindai ulang QR code alat musik tersebut secara mandiri (tombol pengembalian langsung dihilangkan untuk memastikan alat benar-benar di-scan di tempat).
+
+### D. Fitur Pelaporan Alat Hilang (Akses Terproteksi)
+- **Logika Fitur:** Anggota yang telah masuk (login) dapat melaporkan alat musik yang hilang melalui menu "Lapor Hilang".
+- **Parameter Input Form:**
+  - Nama / Jenis Alat (String)
+  - Lokasi Terakhir Terlihat / Hilang (String)
+  - Player Terakhir Pemegang Alat (String)
+- **Tampilan Daftar:** Menampilkan histori/daftar seluruh laporan alat hilang secara real-time kepada semua pengguna terautentikasi.
+
+### E. Fitur Manajemen Sesi Latihan & Presensi (Akses Admin)
+- **Mulai Sesi:** Saat menginisiasi sesi latihan baru, Admin dapat menginput **Tanggal Mulai** dan **Jam Mulai** rencana latihan.
+- **Deteksi Keterlambatan:** Anggota yang melakukan presensi (baik lewat dashboard anggota maupun halaman presensi publik) setelah jam mulai yang ditentukan akan secara otomatis ditandai dengan status `Terlambat` di database dan wajib mengisi form alasan keterlambatan.
+- **Tampilan Detail Sesi:** Admin dapat memantau status kehadiran (Hadir/Terlambat) beserta alasan keterlambatan masing-masing anggota secara langsung dari halaman detail sesi presensi.
+- **Ekspor CSV:** Fitur ekspor CSV di halaman presensi admin otomatis mencantumkan kolom status kehadiran ("Hadir"/"Terlambat") beserta kolom alasan keterlambatan anggota.
 
 ## 5. Panduan Teknis untuk AI Client
 
@@ -79,6 +93,9 @@ Fitur ini hanya muncul dan dapat digunakan setelah pengguna (Admin atau Official
 - **Instruments:** ID (UUID/ShortID untuk QR), JenisAlat, Kondisi, NamaPenggunaTerakhir, CreatedAt.
 - **Sessions:** ID, NamaSesi, IsActive (Boolean), StartAt, EndAt.
 - **SessionLogs:** ID, SessionID, InstrumentID, Status (`Keluar`, `Masuk`), ScannedBy (UserID), Timestamp.
+- **PracticeSession:** ID, Title, Token, IsActive (Boolean), TanggalMulai (String), JamMulai (String), CreatedAt, ClosedAt.
+- **AttendanceRecord:** ID, PracticeSessionID, Nama, Alat, Status (`Hadir`/`Terlambat`), AlasanTerlambat (Text), Timestamp.
+- **LostReport:** ID, NamaAlat, LokasiHilang, PlayerTerakhir, CreatedAt.
 
 ### Batasan Keamanan & Performa
 - **Validasi File:** Implementasikan middleware di Go untuk memeriksa *magic bytes* file upload, memastikan file yang diunggah benar-benar gambar, bukan skrip berbahaya.
