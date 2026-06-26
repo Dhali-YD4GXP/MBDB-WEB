@@ -45,11 +45,11 @@
   },
   {
     "route": "/pendaftaran",
-    "firstLoadUncompressedJsBytes": 562223,
+    "firstLoadUncompressedJsBytes": 565162,
     "firstLoadChunkPaths": [
       ".next/static/chunks/0157n_dodthib.js",
       ".next/static/chunks/14mrh2-p_w84d.js",
-      ".next/static/chunks/3fagqa-qbs4q2.js",
+      ".next/static/chunks/24x8mo0lbhi42.js",
       ".next/static/chunks/1gdoryk6w2r8v.js",
       ".next/static/chunks/27jktro2p5rq9.js",
       ".next/static/chunks/2nykiepra7i1k.js",
@@ -72,12 +72,12 @@
     ]
   },
   {
-    "route": "/admin",
-    "firstLoadUncompressedJsBytes": 557713,
+    "route": "/anggota",
+    "firstLoadUncompressedJsBytes": 555801,
     "firstLoadChunkPaths": [
       ".next/static/chunks/0157n_dodthib.js",
       ".next/static/chunks/14mrh2-p_w84d.js",
-      ".next/static/chunks/1ywu1hiu_h4q_.js",
+      ".next/static/chunks/3d5o3ealxa9oj.js",
       ".next/static/chunks/1gdoryk6w2r8v.js",
       ".next/static/chunks/27jktro2p5rq9.js",
       ".next/static/chunks/2nykiepra7i1k.js",
@@ -86,12 +86,12 @@
     ]
   },
   {
-    "route": "/anggota",
-    "firstLoadUncompressedJsBytes": 555801,
+    "route": "/admin",
+    "firstLoadUncompressedJsBytes": 554838,
     "firstLoadChunkPaths": [
       ".next/static/chunks/0157n_dodthib.js",
       ".next/static/chunks/14mrh2-p_w84d.js",
-      ".next/static/chunks/3d5o3ealxa9oj.js",
+      ".next/static/chunks/3ak_4ucjygyeg.js",
       ".next/static/chunks/1gdoryk6w2r8v.js",
       ".next/static/chunks/27jktro2p5rq9.js",
       ".next/static/chunks/2nykiepra7i1k.js",

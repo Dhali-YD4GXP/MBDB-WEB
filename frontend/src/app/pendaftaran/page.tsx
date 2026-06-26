@@ -130,6 +130,98 @@ export default function RegisterMember() {
     }
   };
 
+  const handlePrintNametag = () => {
+    if (!statusResult) return;
+    const printWindow = window.open('', '_blank', 'width=600,height=500');
+    if (!printWindow) {
+      alert('Gagal membuka jendela cetak. Pastikan pop-up blocker dinonaktifkan.');
+      return;
+    }
+    
+    const doc = printWindow.document;
+    doc.write(`
+      <html>
+        <head>
+          <title>Nametag - ${statusResult.nama}</title>
+          <style>
+            @page {
+              size: 9cm 5.5cm;
+              margin: 0;
+            }
+            body {
+              margin: 0;
+              padding: 0;
+              width: 9cm;
+              height: 5.5cm;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-family: 'Times New Roman', Times, serif;
+              background-color: #ffffff;
+              box-sizing: border-box;
+              -webkit-print-color-adjust: exact;
+            }
+            .card {
+              width: 8.4cm;
+              height: 4.9cm;
+              border: 2px solid #0f172a; /* Dark Navy border */
+              box-sizing: border-box;
+              padding: 0.3cm;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: space-around;
+              text-align: center;
+              background-color: #ffffff;
+            }
+            .nama {
+              font-size: 18pt;
+              font-weight: bold;
+              color: #000000;
+              text-transform: uppercase;
+              line-height: 1.2;
+              word-wrap: break-word;
+              max-width: 100%;
+            }
+            .kelas {
+              font-size: 14pt;
+              font-weight: normal;
+              color: #000000;
+              text-transform: uppercase;
+            }
+            .alat {
+              font-size: 14pt;
+              font-weight: normal;
+              color: #000000;
+              text-transform: uppercase;
+            }
+            .angkatan {
+              font-size: 12pt;
+              font-weight: normal;
+              color: #000000;
+              text-transform: uppercase;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="nama">${statusResult.nama}</div>
+            <div class="kelas">${statusResult.kelas}</div>
+            <div class="alat">${statusResult.alat_diterima || ''}</div>
+            <div class="angkatan">${statusResult.angkatan || ''}</div>
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(function() { window.close(); }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    doc.close();
+  };
+
   return (
     <div
       style={{
@@ -679,6 +771,25 @@ export default function RegisterMember() {
                         }}
                       >
                         🎺 {statusResult.alat_diterima}
+                      </div>
+
+                      <div style={{ marginTop: '1.5rem' }}>
+                        <button
+                          type="button"
+                          onClick={handlePrintNametag}
+                          className="btn btn-accent"
+                          style={{
+                            padding: '0.75rem 2rem',
+                            fontSize: '1rem',
+                            fontWeight: 700,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            boxShadow: 'var(--shadow-md)',
+                          }}
+                        >
+                          📇 Cetak Nametag Anda
+                        </button>
                       </div>
                     </div>
                   </div>
