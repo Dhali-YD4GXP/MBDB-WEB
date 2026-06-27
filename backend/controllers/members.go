@@ -159,7 +159,21 @@ func (mc *MembersController) Create(w http.ResponseWriter, r *http.Request) {
 		}
 		var count int64
 		mc.DB.Model(&models.Member{}).Where("angkatan = ?", req.Angkatan).Count(&count)
-		nomorUrut := fmt.Sprintf("%03d", count+1)
+		
+		var lastMember models.Member
+		nextSeqNum := count + 1
+		if err := mc.DB.Where("angkatan = ? AND nomor_anggota LIKE ?", req.Angkatan, "MBDB-"+angkatanClean+"-%").
+			Order("nomor_anggota desc").First(&lastMember).Error; err == nil {
+			parts := strings.Split(lastMember.NomorAnggota, "-")
+			if len(parts) == 3 {
+				if seq, err := strconv.Atoi(parts[2]); err == nil {
+					if int64(seq) >= nextSeqNum {
+						nextSeqNum = int64(seq) + 1
+					}
+				}
+			}
+		}
+		nomorUrut := fmt.Sprintf("%03d", nextSeqNum)
 		nomorAnggota = fmt.Sprintf("MBDB-%s-%s", angkatanClean, nomorUrut)
 
 		// generate a random unique registration code for activation
@@ -303,6 +317,13 @@ func (mc *MembersController) Delete(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Anggota tidak ditemukan"})
 		return
+	}
+
+	// Delete associated User login account if exists
+	if member.NomorAnggota != "" {
+		if err := mc.DB.Where("username = ?", member.NomorAnggota).Delete(&models.User{}).Error; err != nil {
+			log.Printf("Warning: failed to delete user account for username %s: %v", member.NomorAnggota, err)
+		}
 	}
 
 	if err := mc.DB.Delete(&member).Error; err != nil {

@@ -248,7 +248,21 @@ func (ac *ApplicantsController) UpdateStatus(w http.ResponseWriter, r *http.Requ
 		// Count existing members in this cohort to get the next sequence number
 		var count int64
 		ac.DB.Model(&models.Member{}).Where("angkatan = ?", applicant.Angkatan).Count(&count)
-		nomorUrut := fmt.Sprintf("%03d", count+1)
+		
+		var lastMember models.Member
+		nextSeqNum := count + 1
+		if err := ac.DB.Where("angkatan = ? AND nomor_anggota LIKE ?", applicant.Angkatan, "MBDB-"+angkatanClean+"-%").
+			Order("nomor_anggota desc").First(&lastMember).Error; err == nil {
+			parts := strings.Split(lastMember.NomorAnggota, "-")
+			if len(parts) == 3 {
+				if seq, err := strconv.Atoi(parts[2]); err == nil {
+					if int64(seq) >= nextSeqNum {
+						nextSeqNum = int64(seq) + 1
+					}
+				}
+			}
+		}
+		nomorUrut := fmt.Sprintf("%03d", nextSeqNum)
 		nomorAnggota := fmt.Sprintf("MBDB-%s-%s", angkatanClean, nomorUrut)
 
 		newMember := models.Member{

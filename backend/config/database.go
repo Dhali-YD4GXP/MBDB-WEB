@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -225,7 +226,21 @@ func migrateExistingAlumniAccounts() {
 		
 		var count int64
 		DB.Model(&models.Member{}).Where("angkatan = ? AND nomor_anggota != ? AND nomor_anggota IS NOT NULL", m.Angkatan, "").Count(&count)
-		nomorUrut := fmt.Sprintf("%03d", count+1)
+		
+		var lastMember models.Member
+		nextSeqNum := count + 1
+		if err := DB.Where("angkatan = ? AND nomor_anggota LIKE ?", m.Angkatan, "MBDB-"+angkatanClean+"-%").
+			Order("nomor_anggota desc").First(&lastMember).Error; err == nil {
+			parts := strings.Split(lastMember.NomorAnggota, "-")
+			if len(parts) == 3 {
+				if seq, err := strconv.Atoi(parts[2]); err == nil {
+					if int64(seq) >= nextSeqNum {
+						nextSeqNum = int64(seq) + 1
+					}
+				}
+			}
+		}
+		nomorUrut := fmt.Sprintf("%03d", nextSeqNum)
 		m.NomorAnggota = fmt.Sprintf("MBDB-%s-%s", angkatanClean, nomorUrut)
 
 		// Generate activation code
