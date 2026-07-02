@@ -25,6 +25,7 @@ export interface Instrument {
   jenis_alat: string;
   kondisi: 'Bagus' | 'Butuh Perbaikan' | 'Rusak Total';
   nama_pengguna_terakhir?: string;
+  catatan_kerusakan?: string;
   created_at: string;
 }
 

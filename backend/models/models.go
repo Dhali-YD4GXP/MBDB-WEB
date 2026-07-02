@@ -35,6 +35,7 @@ type Instrument struct {
 	JenisAlat           string    `gorm:"not null;type:varchar(100)" json:"jenis_alat"`
 	Kondisi             string    `gorm:"not null;type:varchar(50)" json:"kondisi"` // "Bagus", "Butuh Perbaikan", "Rusak Total"
 	NamaPenggunaTerakhir string    `gorm:"type:varchar(150)" json:"nama_pengguna_terakhir"` // Optional last user
+	CatatanKerusakan    string    `gorm:"type:text" json:"catatan_kerusakan"`
 	CreatedAt           time.Time `json:"created_at"`
 }
 

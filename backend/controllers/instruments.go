@@ -37,6 +37,7 @@ func (ic *InstrumentsController) Create(w http.ResponseWriter, r *http.Request) 
 		JenisAlat            string `json:"jenis_alat"`
 		Kondisi              string `json:"kondisi"`                 // "Bagus", "Butuh Perbaikan", "Rusak Total"
 		NamaPenggunaTerakhir string `json:"nama_pengguna_terakhir"` // Optional
+		CatatanKerusakan     string `json:"catatan_kerusakan"`       // Optional
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -78,6 +79,7 @@ func (ic *InstrumentsController) Create(w http.ResponseWriter, r *http.Request) 
 		JenisAlat:           req.JenisAlat,
 		Kondisi:             kondisi,
 		NamaPenggunaTerakhir: req.NamaPenggunaTerakhir,
+		CatatanKerusakan:    strings.TrimSpace(req.CatatanKerusakan),
 		CreatedAt:           time.Now(),
 	}
 
@@ -156,6 +158,7 @@ func (ic *InstrumentsController) Update(w http.ResponseWriter, r *http.Request) 
 		JenisAlat            string `json:"jenis_alat"`
 		Kondisi              string `json:"kondisi"`
 		NamaPenggunaTerakhir string `json:"nama_pengguna_terakhir"`
+		CatatanKerusakan     string `json:"catatan_kerusakan"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -187,6 +190,7 @@ func (ic *InstrumentsController) Update(w http.ResponseWriter, r *http.Request) 
 
 	// Last user is optional and can be updated to empty
 	instrument.NamaPenggunaTerakhir = req.NamaPenggunaTerakhir
+	instrument.CatatanKerusakan = strings.TrimSpace(req.CatatanKerusakan)
 
 	if err := ic.DB.Save(&instrument).Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

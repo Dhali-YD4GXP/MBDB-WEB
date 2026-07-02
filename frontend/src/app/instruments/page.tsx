@@ -18,7 +18,16 @@ export default function InstrumentsPage() {
   const [jenisAlat, setJenisAlat] = useState('');
   const [kondisi, setKondisi] = useState('Bagus');
   const [namaPengguna, setNamaPengguna] = useState('');
+  const [catatanKerusakan, setCatatanKerusakan] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Edit Modal State
+  const [editingInstrument, setEditingInstrument] = useState<Instrument | null>(null);
+  const [editJenisAlat, setEditJenisAlat] = useState('');
+  const [editKondisi, setEditKondisi] = useState('Bagus');
+  const [editNamaPengguna, setEditNamaPengguna] = useState('');
+  const [editCatatanKerusakan, setEditCatatanKerusakan] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
   
   // QR Code Generation Modal
   const [generatedInstrument, setGeneratedInstrument] = useState<Instrument | null>(null);
@@ -77,6 +86,7 @@ export default function InstrumentsPage() {
         jenis_alat: jenisAlat,
         kondisi: kondisi,
         nama_pengguna_terakhir: namaPengguna || undefined,
+        catatan_kerusakan: catatanKerusakan || undefined,
       });
 
       // Generate QR Code data URL
@@ -96,6 +106,7 @@ export default function InstrumentsPage() {
       setJenisAlat('');
       setKondisi('Bagus');
       setNamaPengguna('');
+      setCatatanKerusakan('');
 
       // Refresh list
       fetchInstruments();
@@ -103,6 +114,39 @@ export default function InstrumentsPage() {
       setErrorMsg(err.message || 'Gagal mendaftarkan alat baru.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleOpenEditModal = (inst: Instrument) => {
+    setEditingInstrument(inst);
+    setEditJenisAlat(inst.jenis_alat);
+    setEditKondisi(inst.kondisi);
+    setEditNamaPengguna(inst.nama_pengguna_terakhir || '');
+    setEditCatatanKerusakan(inst.catatan_kerusakan || '');
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingInstrument) return;
+    setIsUpdating(true);
+    setErrorMsg(null);
+
+    try {
+      await api.put(`/api/instruments/${editingInstrument.id}`, {
+        jenis_alat: editJenisAlat,
+        kondisi: editKondisi,
+        nama_pengguna_terakhir: editNamaPengguna || '',
+        catatan_kerusakan: editCatatanKerusakan || '',
+      });
+
+      // Close modal
+      setEditingInstrument(null);
+      // Refresh list
+      fetchInstruments();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Gagal memperbarui data alat.');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -303,6 +347,19 @@ export default function InstrumentsPage() {
                   />
                 </div>
 
+                <div className="form-group">
+                  <label className="form-label">Catatan Kerusakan (Bila ada)</label>
+                  <textarea
+                    className="form-input"
+                    placeholder="Tulis detail kerusakan alat musik jika ada..."
+                    value={catatanKerusakan}
+                    onChange={(e) => setCatatanKerusakan(e.target.value)}
+                    disabled={isSubmitting}
+                    rows={2}
+                    style={{ resize: 'vertical' }}
+                  />
+                </div>
+
                 <button
                   type="submit"
                   className="btn btn-accent"
@@ -445,6 +502,12 @@ export default function InstrumentsPage() {
                           </div>
                         )}
                       </div>
+                      
+                      {inst.catatan_kerusakan && (
+                        <div style={{ marginTop: '0.75rem', fontSize: '0.825rem', color: 'var(--text-secondary)', padding: '0.5rem 0.75rem', backgroundColor: 'var(--danger-light)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--danger)', textAlign: 'left' }}>
+                          ⚠️ <strong>Catatan Kerusakan:</strong> {inst.catatan_kerusakan}
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -454,6 +517,14 @@ export default function InstrumentsPage() {
                         style={{ padding: '0.4rem 0.8rem', fontSize: '0.825rem' }}
                       >
                         👁 QR Code
+                      </button>
+
+                      <button
+                        onClick={() => handleOpenEditModal(inst)}
+                        className="btn btn-outline"
+                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.825rem', borderColor: 'var(--accent)', color: 'var(--accent)' }}
+                      >
+                        ✏️ Edit
                       </button>
                       
                       {role === 'Admin' && (
@@ -542,6 +613,123 @@ export default function InstrumentsPage() {
                 Tutup
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Instrument Modal */}
+      {editingInstrument && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(11, 15, 25, 0.85)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '1rem',
+            animation: 'fadeIn 0.2s ease-out',
+          }}
+        >
+          <div className="card glass" style={{ width: '100%', maxWidth: '420px', padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--accent)' }}>Edit Data & Kondisi Alat</h2>
+              <button
+                onClick={() => setEditingInstrument(null)}
+                style={{ fontSize: '1.5rem', color: 'var(--text-secondary)', cursor: 'pointer', lineHeight: 1, background: 'none', border: 'none' }}
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div className="form-group">
+                <label className="form-label">ID Alat</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={editingInstrument.id}
+                  disabled
+                  style={{ opacity: 0.6 }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Jenis / Nama Alat</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={editJenisAlat}
+                  onChange={(e) => setEditJenisAlat(e.target.value)}
+                  required
+                  disabled={isUpdating}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Kondisi Alat</label>
+                <select
+                  className="form-input"
+                  value={editKondisi}
+                  onChange={(e) => setEditKondisi(e.target.value)}
+                  required
+                  disabled={isUpdating}
+                >
+                  <option value="Bagus">Bagus (Siap Pakai)</option>
+                  <option value="Butuh Perbaikan">Butuh Perbaikan</option>
+                  <option value="Rusak Total">Rusak Total</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Pengguna Terakhir (Opsional)</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={editNamaPengguna}
+                  onChange={(e) => setEditNamaPengguna(e.target.value)}
+                  disabled={isUpdating}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Catatan Kerusakan (Bila ada)</label>
+                <textarea
+                  className="form-input"
+                  value={editCatatanKerusakan}
+                  onChange={(e) => setEditCatatanKerusakan(e.target.value)}
+                  disabled={isUpdating}
+                  rows={3}
+                  style={{ resize: 'vertical' }}
+                  placeholder="Deskripsikan kerusakan jika ada..."
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button
+                  type="submit"
+                  className="btn btn-accent"
+                  style={{ flex: 1, padding: '0.75rem' }}
+                  disabled={isUpdating}
+                >
+                  {isUpdating ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingInstrument(null)}
+                  className="btn btn-secondary"
+                  style={{ flex: 1, padding: '0.75rem' }}
+                  disabled={isUpdating}
+                >
+                  Batal
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
