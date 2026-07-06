@@ -37,6 +37,7 @@ export default function InstrumentsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterKondisi, setFilterKondisi] = useState('');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isPrintingBluetooth, setIsPrintingBluetooth] = useState(false);
 
   useEffect(() => {
     // Auth Guard
@@ -114,6 +115,123 @@ export default function InstrumentsPage() {
       setErrorMsg(err.message || 'Gagal mendaftarkan alat baru.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePrintBluetooth = async (inst: Instrument) => {
+    const nav = navigator as any;
+    if (!nav.bluetooth) {
+      alert('Browser Anda tidak mendukung Web Bluetooth. Silakan gunakan Google Chrome di Android atau Desktop.');
+      return;
+    }
+
+    setIsPrintingBluetooth(true);
+    try {
+      // 1. Request Bluetooth Device (accept all devices, support standard printer services)
+      const device = await nav.bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: [
+          '000018f0-0000-1000-8000-00805f9b34fb', // Standard BLE Printer UUID
+          'e7e1a190-273d-11e6-8e5d-0002a5d5c51b', // Common BLE printer UUID
+          '4953544c-5b73-4341-4d41-4348494e4553'  // Another common service
+        ]
+      });
+
+      // 2. Connect to GATT Server
+      const server = await device.gatt?.connect();
+      if (!server) throw new Error('Gagal terhubung ke server GATT printer.');
+
+      // 3. Find primary service
+      const services = await server.getPrimaryServices();
+      if (services.length === 0) {
+        throw new Error('Tidak ada service primary ditemukan di printer.');
+      }
+      const service = services[0];
+
+      // 4. Get write characteristic
+      const characteristics = await service.getCharacteristics();
+      const characteristic = characteristics.find(
+        (c: any) => c.properties.write || c.properties.writeWithoutResponse
+      );
+
+      if (!characteristic) {
+        throw new Error('Karakteristik write printer tidak ditemukan.');
+      }
+
+      // 5. Build ESC/POS payload
+      const encoder = new TextEncoder();
+      const init = new Uint8Array([0x1B, 0x40]); // Initialize printer
+      const center = new Uint8Array([0x1B, 0x61, 0x01]); // Align center
+      const boldOn = new Uint8Array([0x1B, 0x45, 0x01]); // Bold ON
+      const boldOff = new Uint8Array([0x1B, 0x45, 0x00]); // Bold OFF
+
+      // Header Text
+      const headerBytes = encoder.encode("MBDB SMANSAAGUNG\nINVENTARIS ALAT\n================================\n");
+
+      // QR Code native printer command
+      const qrData = inst.id;
+      const qrBytes = encoder.encode(qrData);
+      const dataLen = qrBytes.length;
+
+      // GS ( k: model 2 (type 1D 28 6B 04 00 31 41 32 00)
+      const qrModel = new Uint8Array([0x1D, 0x28, 0x6B, 0x04, 0x00, 0x31, 0x41, 0x32, 0x00]);
+      // GS ( k: set size (type 1D 28 6B 03 00 31 43 size) - using size 8
+      const qrSize = new Uint8Array([0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x43, 0x08]);
+      // GS ( k: error correction level L (type 1D 28 6B 03 00 31 44 30)
+      const qrEC = new Uint8Array([0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x44, 0x30]);
+      // GS ( k: store QR data (type 1D 28 6B dataLen+3 00 31 50 30 data)
+      const storeLen = dataLen + 3;
+      const qrStoreHeader = new Uint8Array([0x1D, 0x28, 0x6B, storeLen & 0xFF, (storeLen >> 8) & 0xFF, 0x31, 0x50, 0x30]);
+      // GS ( k: print QR (type 1D 28 6B 03 00 31 51 30)
+      const qrPrint = new Uint8Array([0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x51, 0x30]);
+
+      // Instrument Details text
+      const idBytes = encoder.encode(`\nID: ${inst.id}\n`);
+      const nameBytes = encoder.encode(`ALAT: ${inst.jenis_alat}\n`);
+      const footerBytes = encoder.encode("================================\n\n\n\n");
+
+      // Merge all buffers
+      const totalLen = init.length + center.length + headerBytes.length +
+                       qrModel.length + qrSize.length + qrEC.length +
+                       qrStoreHeader.length + qrBytes.length + qrPrint.length +
+                       boldOn.length + idBytes.length + boldOff.length +
+                       nameBytes.length + footerBytes.length;
+      
+      const payload = new Uint8Array(totalLen);
+      let offset = 0;
+      const addChunk = (chunk: Uint8Array) => {
+        payload.set(chunk, offset);
+        offset += chunk.length;
+      };
+
+      addChunk(init);
+      addChunk(center);
+      addChunk(headerBytes);
+      addChunk(qrModel);
+      addChunk(qrSize);
+      addChunk(qrEC);
+      addChunk(qrStoreHeader);
+      addChunk(qrBytes);
+      addChunk(qrPrint);
+      addChunk(boldOn);
+      addChunk(idBytes);
+      addChunk(boldOff);
+      addChunk(nameBytes);
+      addChunk(footerBytes);
+
+      // Write in chunks to accommodate BLE MTU size limit (20 bytes safely)
+      const chunkSize = 20;
+      for (let i = 0; i < payload.length; i += chunkSize) {
+        const chunk = payload.slice(i, i + chunkSize);
+        await characteristic.writeValue(chunk);
+      }
+
+      alert('Berhasil mengirim data cetak ke printer Bluetooth!');
+    } catch (err: any) {
+      console.error(err);
+      alert('Gagal mencetak via Bluetooth: ' + (err.message || err));
+    } finally {
+      setIsPrintingBluetooth(false);
     }
   };
 
@@ -598,17 +716,27 @@ export default function InstrumentsPage() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <button onClick={handleDownloadQR} className="btn btn-accent" style={{ flex: 1 }}>
-                Unduh Gambar (.png)
-              </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button onClick={handleDownloadQR} className="btn btn-accent" style={{ flex: 1, padding: '0.65rem 0.5rem', fontSize: '0.85rem' }}>
+                  📥 Unduh PNG
+                </button>
+                <button
+                  onClick={() => handlePrintBluetooth(generatedInstrument)}
+                  className="btn btn-primary"
+                  style={{ flex: 1, backgroundColor: '#0284c7', borderColor: '#0284c7', padding: '0.65rem 0.5rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}
+                  disabled={isPrintingBluetooth}
+                >
+                  {isPrintingBluetooth ? '🔄 Menghubungkan...' : '🖨️ Cetak Bluetooth'}
+                </button>
+              </div>
               <button
                 onClick={() => {
                   setGeneratedInstrument(null);
                   setQrCodeUrl(null);
                 }}
                 className="btn btn-secondary"
-                style={{ flex: 1 }}
+                style={{ width: '100%', padding: '0.65rem' }}
               >
                 Tutup
               </button>
