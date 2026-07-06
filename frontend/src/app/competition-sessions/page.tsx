@@ -42,6 +42,7 @@ export default function CompetitionSessionsPage() {
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPrintingBluetooth, setIsPrintingBluetooth] = useState(false);
   
   // Active polling interval ref
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -266,6 +267,117 @@ export default function CompetitionSessionsPage() {
       handleSelectSession(id);
     } catch (err: any) {
       setErrorMsg(err.message || 'Gagal menutup sesi presensi lomba');
+    }
+  };
+
+  const handlePrintBluetooth = async (sessionTitle: string, url: string) => {
+    const nav = navigator as any;
+    if (!nav.bluetooth) {
+      alert('Browser Anda tidak mendukung Web Bluetooth. Silakan gunakan Google Chrome di Android atau Desktop.');
+      return;
+    }
+
+    setIsPrintingBluetooth(true);
+    try {
+      const device = await nav.bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: [
+          '000018f0-0000-1000-8000-00805f9b34fb', // Standard BLE Printer UUID
+          'e7e1a190-273d-11e6-8e5d-0002a5d5c51b', // Common BLE printer UUID
+          '4953544c-5b73-4341-4d41-4348494e4553'  // Another common service
+        ]
+      });
+
+      const server = await device.gatt?.connect();
+      if (!server) throw new Error('Gagal terhubung ke server GATT printer.');
+
+      const services = await server.getPrimaryServices();
+      if (services.length === 0) {
+        throw new Error('Tidak ada service primary ditemukan di printer.');
+      }
+      const service = services[0];
+
+      const characteristics = await service.getCharacteristics();
+      const characteristic = characteristics.find(
+        (c: any) => c.properties.write || c.properties.writeWithoutResponse
+      );
+
+      if (!characteristic) {
+        throw new Error('Karakteristik write printer tidak ditemukan.');
+      }
+
+      const encoder = new TextEncoder();
+      const init = new Uint8Array([0x1B, 0x40]); // Initialize printer
+      const center = new Uint8Array([0x1B, 0x61, 0x01]); // Align center
+      const boldOn = new Uint8Array([0x1B, 0x45, 0x01]); // Bold ON
+      const boldOff = new Uint8Array([0x1B, 0x45, 0x00]); // Bold OFF
+
+      // Header Text
+      const headerBytes = encoder.encode("MBDB SMANSAAGUNG\nPRESENSI LOMBA\n================================\n");
+      const titleBytes = encoder.encode(`SESI: ${sessionTitle}\n`);
+
+      // QR Code native printer command
+      const qrBytes = encoder.encode(url);
+      const dataLen = qrBytes.length;
+
+      // GS ( k: model 2 (type 1D 28 6B 04 00 31 41 32 00)
+      const qrModel = new Uint8Array([0x1D, 0x28, 0x6B, 0x04, 0x00, 0x31, 0x41, 0x32, 0x00]);
+      // GS ( k: set size (type 1D 28 6B 03 00 31 43 size) - using size 6
+      const qrSize = new Uint8Array([0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x43, 0x06]);
+      // GS ( k: error correction level L (type 1D 28 6B 03 00 31 44 30)
+      const qrEC = new Uint8Array([0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x44, 0x30]);
+      // GS ( k: store QR data (type 1D 28 6B dataLen+3 00 31 50 30 data)
+      const storeLen = dataLen + 3;
+      const qrStoreHeader = new Uint8Array([0x1D, 0x28, 0x6B, storeLen & 0xFF, (storeLen >> 8) & 0xFF, 0x31, 0x50, 0x30]);
+      // GS ( k: print QR (type 1D 28 6B 03 00 31 51 30)
+      const qrPrint = new Uint8Array([0x1D, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x51, 0x30]);
+
+      // URL and footer
+      const urlText = url.length > 32 ? url.substring(0, 32) + '...' : url;
+      const urlBytes = encoder.encode(`\n${urlText}\n`);
+      const footerBytes = encoder.encode("================================\n\n\n\n");
+
+      // Merge buffers
+      const totalLen = init.length + center.length + headerBytes.length + boldOn.length + titleBytes.length + boldOff.length +
+                       qrModel.length + qrSize.length + qrEC.length +
+                       qrStoreHeader.length + qrBytes.length + qrPrint.length +
+                       urlBytes.length + footerBytes.length;
+      
+      const payload = new Uint8Array(totalLen);
+      let offset = 0;
+      const addChunk = (chunk: Uint8Array) => {
+        payload.set(chunk, offset);
+        offset += chunk.length;
+      };
+
+      addChunk(init);
+      addChunk(center);
+      addChunk(headerBytes);
+      addChunk(boldOn);
+      addChunk(titleBytes);
+      addChunk(boldOff);
+      addChunk(qrModel);
+      addChunk(qrSize);
+      addChunk(qrEC);
+      addChunk(qrStoreHeader);
+      addChunk(qrBytes);
+      addChunk(qrPrint);
+      addChunk(urlBytes);
+      addChunk(footerBytes);
+
+      // Write in chunks to accommodate BLE MTU size limit (20 bytes safely)
+      const chunkSize = 20;
+      for (let i = 0; i < payload.length; i += chunkSize) {
+        const chunk = payload.slice(i, i + chunkSize);
+        await characteristic.writeValue(chunk);
+      }
+
+      alert('Berhasil mencetak QR Presensi!');
+    } catch (err: any) {
+      console.error(err);
+      alert('Gagal mencetak QR Presensi: ' + (err.message || err));
+    } finally {
+      setIsPrintingBluetooth(false);
     }
   };
 
@@ -805,13 +917,23 @@ export default function CompetitionSessionsPage() {
                     </a>
                   </div>
                   
-                  <button
-                    onClick={() => window.open(qrImageUrl, '_blank')}
-                    className="btn btn-outline"
-                    style={{ padding: '0.35rem 0.85rem', fontSize: '0.8rem', background: '#ffffff' }}
-                  >
-                    🖨️ Cetak / Buka Gambar QR
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <button
+                      onClick={() => window.open(qrImageUrl, '_blank')}
+                      className="btn btn-outline"
+                      style={{ padding: '0.35rem 0.85rem', fontSize: '0.8rem', background: '#ffffff' }}
+                    >
+                      🖼️ Buka QR
+                    </button>
+                    <button
+                      onClick={() => handlePrintBluetooth(selectedSessionData.session.title, presenceUrl)}
+                      className="btn btn-primary"
+                      style={{ padding: '0.35rem 0.85rem', fontSize: '0.8rem', backgroundColor: '#0284c7', borderColor: '#0284c7', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                      disabled={isPrintingBluetooth}
+                    >
+                      {isPrintingBluetooth ? '🔄 Menghubungkan...' : '🖨️ Cetak Bluetooth'}
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div style={{ padding: '1.25rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
