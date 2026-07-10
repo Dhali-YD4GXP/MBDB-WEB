@@ -309,8 +309,8 @@ export default function InstrumentsPage() {
         format: 'a4'
       });
       
-      const colCount = 3;
-      const rowCount = 4;
+      const colCount = 4;
+      const rowCount = 6;
       const itemsPerPage = colCount * rowCount;
       
       qrCodes.forEach((item, index) => {
@@ -322,26 +322,26 @@ export default function InstrumentsPage() {
         const col = pageIndex % colCount;
         const row = Math.floor(pageIndex / colCount);
         
-        // Col width 5cm, spacing 1.5cm, margins 1.5cm left/right
-        const x = 1.5 + col * (5 + 1.5);
-        // Row height 5.2cm, spacing 1.0cm, margins 2.0cm top
-        const y = 2.0 + row * (5.2 + 1);
+        // Col width 4.0cm, spacing 0.6cm, margins 1.6cm left/right
+        const x = 1.6 + col * (4.0 + 0.6);
+        // Row height 4.2cm, spacing 0.4cm, margins 1.25cm top
+        const y = 1.25 + row * (4.2 + 0.4);
         
-        // Add QR image (centered in the 5cm column box, so offset x by 0.5cm)
-        doc.addImage(item.qrUrl, 'PNG', x + 0.5, y, 4, 4);
+        // Add QR image (centered in the 4.0cm column box, so offset x by 0.5cm)
+        doc.addImage(item.qrUrl, 'PNG', x + 0.5, y, 3, 3);
         
         // Draw centered caption text under QR code
         doc.setFont('Helvetica', 'bold');
-        doc.setFontSize(8);
-        doc.text(item.inst.id, x + 2.5, y + 4.4, { align: 'center' });
+        doc.setFontSize(7.5);
+        doc.text(item.inst.id, x + 2.0, y + 3.4, { align: 'center' });
         
         doc.setFont('Helvetica', 'normal');
-        doc.setFontSize(7);
+        doc.setFontSize(6.5);
         let labelText = item.inst.jenis_alat;
-        if (labelText.length > 25) {
-          labelText = labelText.substring(0, 22) + '...';
+        if (labelText.length > 22) {
+          labelText = labelText.substring(0, 19) + '...';
         }
-        doc.text(labelText, x + 2.5, y + 4.9, { align: 'center' });
+        doc.text(labelText, x + 2.0, y + 3.9, { align: 'center' });
       });
       
       doc.save('inventaris_qr_codes.pdf');
